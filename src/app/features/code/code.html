@@ -64,15 +64,16 @@
   <p class="text-secondary">
     Versioned namespace, every endpoint documented by an rswag request spec
     that emits <code>swagger/v1/swagger.yaml</code> as a side effect. Auth is a
-    single admin user, sessions in httpOnly cookies, no CSRF middleware —
-    defense rests on the CORS allowlist plus JSON content-type forcing a
-    preflight.
+    single admin user with a stateless JWT — login returns a Bearer token,
+    the SPA sends it in the <code>Authorization</code> header on every write.
+    No cookies, no CSRF middleware: the header is not auto-attached
+    cross-origin, so CSRF is structurally out of reach.
   </p>
 <pre class="code-tree"><code>portfolio-api/
 ├── app/
 │   ├── controllers/
 │   │   ├── concerns/
-│   │   │   └── authentication.rb        # current_user, login, logout
+│   │   │   └── authentication.rb        # current_user, authenticate!, issue_token
 │   │   └── api/
 │   │       └── v1/
 │   │           ├── base_controller.rb   # before_action :authenticate!
@@ -82,6 +83,8 @@
 │   │           ├── faq_items_controller.rb
 │   │           ├── community_items_controller.rb
 │   │           └── contact_messages_controller.rb
+│   ├── services/
+│   │   └── json_web_token.rb            # HS256 encode/decode, secret_key_base
 │   └── models/
 │       ├── user.rb                      # has_secure_password
 │       ├── project.rb                   # featured / published scopes
@@ -90,9 +93,9 @@
 │       └── contact_message.rb           # email format + normalize
 ├── config/
 │   ├── routes.rb                        # /api/v1 namespace
-│   ├── application.rb                   # cookies + session re-added on api_only
+│   ├── application.rb                   # api_only, no session middleware
 │   └── initializers/
-│       └── cors.rb                      # localhost:4200 allowlist, credentials: true
+│       └── cors.rb                      # localhost:4200 allowlist
 ├── db/
 │   ├── migrate/                         # null:false + indexes on the columns
 │   ├── schema.rb                        #   that get filtered/looked-up
@@ -129,16 +132,20 @@ end</code></pre>
   </article>
 
   <article class="snippet">
-    <h3 class="h5">2. The HTTP credentials interceptor</h3>
+    <h3 class="h5">2. The JWT auth interceptor</h3>
     <p class="text-secondary">
-      One line of belt-and-suspenders. Combined with
-      <code>{{ '{' }} withCredentials: true {{ '}' }}</code> already set in <code>ApiService</code>, every
-      outbound request carries the Rails session cookie — even the ones I
-      forget to think about.
+      One interceptor wires <code>Authorization: Bearer ...</code> onto every
+      outbound request when a token is present in <code>TokenService</code>.
+      No cookies, no <code>withCredentials</code>, no CSRF surface — the
+      header is not auto-attached cross-origin, so attackers can't ride it.
     </p>
-<pre class="code-snippet"><code>// core/interceptors/credentials.interceptor.ts
-export const credentialsInterceptor: HttpInterceptorFn = (req, next) =&gt;
-  next(req.clone({{ '{' }} withCredentials: true {{ '}' }}));</code></pre>
+<pre class="code-snippet"><code>// core/interceptors/auth.interceptor.ts
+export const authInterceptor: HttpInterceptorFn = (req, next) =&gt; {{ '{' }}
+  const token = inject(TokenService).get();
+  return token
+    ? next(req.clone({{ '{' }} setHeaders: {{ '{' }} Authorization: `Bearer ${{ '$' }}{{ '{' }}token{{ '}' }}` {{ '}' }} {{ '}' }}))
+    : next(req);
+{{ '}' }};</code></pre>
   </article>
 
   <article class="snippet">
@@ -215,31 +222,40 @@ end</code></pre>
   </article>
 
   <article class="snippet">
-    <h3 class="h5">6. Re-adding cookies to an API-only Rails app</h3>
+    <h3 class="h5">6. Stateless JWT auth — one service, two methods</h3>
     <p class="text-secondary">
-      <code>config.api_only = true</code> strips out the cookie + session
-      middleware. For an SPA with cross-origin auth, you re-add them.
-      <code>SameSite=None</code> lets the browser send the cookie cross-site;
-      <code>Secure</code> only flips on in production because localhost is
-      plain HTTP.
+      Login signs a JWT with <code>secret_key_base</code>; every subsequent
+      request decodes the <code>Authorization: Bearer</code> header in the
+      <code>Authentication</code> concern. No sessions, no cookies, no
+      <code>SameSite</code>/<code>Secure</code> dance to keep dev and prod in
+      sync.
     </p>
-<pre class="code-snippet"><code># config/application.rb
-config.api_only = true
+<pre class="code-snippet"><code># app/services/json_web_token.rb
+class JsonWebToken
+  ALGORITHM = "HS256"
+  DEFAULT_EXP = 7.days
 
-config.middleware.use ActionDispatch::Cookies
-config.middleware.use ActionDispatch::Session::CookieStore,
-  key: "_portfolio_api_session",
-  same_site: :none,
-  secure: Rails.env.production?</code></pre>
+  def self.encode(payload, exp: DEFAULT_EXP.from_now)
+    JWT.encode(payload.merge(exp: exp.to_i), secret, ALGORITHM)
+  end
+
+  def self.decode(token)
+    JWT.decode(token, secret, true, algorithm: ALGORITHM).first
+  rescue JWT::DecodeError, JWT::ExpiredSignature
+    nil
+  end
+
+  def self.secret = Rails.application.secret_key_base
+end</code></pre>
   </article>
 
   <article class="snippet">
-    <h3 class="h5">7. CORS — the only thing standing between the world and the API</h3>
+    <h3 class="h5">7. CORS — narrow allowlist, no credentials needed</h3>
     <p class="text-secondary">
-      No CSRF middleware. The CORS allowlist plus the frontend's
-      <code>Content-Type: application/json</code> forces a preflight that an
-      arbitrary attacker origin can't pass. Cheaper than full form-token
-      plumbing and no surprises for the SPA.
+      No CSRF middleware. With JWT in the <code>Authorization</code> header
+      (not a cookie), browsers don't auto-attach it cross-origin — CSRF is
+      structurally impossible. The CORS allowlist exists to limit who can
+      even reach the API.
     </p>
 <pre class="code-snippet"><code># config/initializers/cors.rb
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
@@ -249,8 +265,7 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
     resource "*",
       headers: :any,
       expose:  %w[Authorization],
-      methods: %i[get post put patch delete options head],
-      credentials: true
+      methods: %i[get post put patch delete options head]
   end
 end</code></pre>
   </article>
