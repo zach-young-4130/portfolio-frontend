@@ -1,0 +1,35 @@
+import { Component, ChangeDetectionStrategy, DestroyRef, inject, signal, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NgbAccordionModule } from '@ng-bootstrap/ng-bootstrap';
+import { FaqService } from '../../core/services/faq.service';
+import { FaqItem } from '../../core/models/faq-item.model';
+import { PageHeroComponent } from '../../shared/components/page-hero/page-hero';
+
+@Component({
+  selector: 'app-faq',
+  standalone: true,
+  imports: [NgbAccordionModule, PageHeroComponent],
+  templateUrl: './faq.html',
+  styleUrl: './faq.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class FaqComponent implements OnInit {
+  private faqService = inject(FaqService);
+  private destroyRef = inject(DestroyRef);
+
+  protected items = signal<FaqItem[]>([]);
+  protected loading = signal(true);
+
+  ngOnInit(): void {
+    this.faqService
+      .list()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.items.set(res.faq_items);
+          this.loading.set(false);
+        },
+        error: () => this.loading.set(false),
+      });
+  }
+}

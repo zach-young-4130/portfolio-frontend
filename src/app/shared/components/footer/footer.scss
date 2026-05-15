@@ -1,0 +1,20 @@
+:host {
+  display: block;
+}
+
+footer {
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border);
+  color: var(--fg);
+}
+
+.social-link {
+  color: var(--fg-muted);
+  transition: color 0.2s ease;
+  display: inline-flex;
+
+  &:hover,
+  &:focus {
+    color: var(--accent);
+  }
+}

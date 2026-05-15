@@ -1,0 +1,30 @@
+:host {
+  display: block;
+}
+
+nav {
+  background: var(--nav-bg);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(8px);
+}
+
+.navbar-brand {
+  color: var(--fg);
+
+  &:hover {
+    color: var(--accent);
+  }
+}
+
+.nav-link {
+  color: var(--fg);
+
+  &.active {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  &:hover {
+    color: var(--accent);
+  }
+}

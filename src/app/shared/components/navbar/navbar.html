@@ -1,0 +1,67 @@
+<nav class="navbar navbar-expand-md sticky-top" aria-label="Primary">
+  <div class="container">
+    <a class="navbar-brand fw-bold" routerLink="/">Zach Young</a>
+
+    <button
+      class="navbar-toggler"
+      type="button"
+      (click)="isCollapsed = !isCollapsed"
+      [attr.aria-expanded]="!isCollapsed"
+      aria-controls="primary-nav"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon" aria-hidden="true"></span>
+    </button>
+
+    <div id="primary-nav" class="collapse navbar-collapse" [ngbCollapse]="isCollapsed">
+      <ul class="navbar-nav me-auto mb-2 mb-md-0">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/projects" routerLinkActive="active">Projects</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/code" routerLinkActive="active">Code</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/faq" routerLinkActive="active">FAQ</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/community" routerLinkActive="active">Community</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/contact" routerLinkActive="active">Contact</a>
+        </li>
+        @if (auth.isAuthenticated()) {
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/admin" routerLinkActive="active">Admin</a>
+          </li>
+        }
+      </ul>
+
+      <div class="d-flex align-items-center gap-2">
+        <button
+          type="button"
+          class="btn btn-link nav-link p-1"
+          (click)="theme.toggle()"
+          [attr.aria-label]="theme.theme() === 'light' ? 'Switch to dark theme' : 'Switch to light theme'"
+        >
+          @if (theme.theme() === 'light') {
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+            </svg>
+          } @else {
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <circle cx="12" cy="12" r="5" />
+              <path d="M12 1v2m0 18v2m11-11h-2M3 12H1m17.66-7.66l-1.41 1.41M6.05 17.95l-1.41 1.41m0-13.32l1.41 1.41m11.31 11.31l1.41 1.41" stroke="currentColor" stroke-width="2" fill="none" />
+            </svg>
+          }
+        </button>
+
+        @if (auth.isAuthenticated()) {
+          <button type="button" class="btn btn-outline-secondary btn-sm" (click)="logout()">
+            Logout
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+</nav>

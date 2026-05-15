@@ -1,0 +1,88 @@
+<section class="container py-5">
+  <header class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2 m-0">Manage FAQ</h1>
+    <button type="button" class="btn btn-primary" (click)="openNew()">New question</button>
+  </header>
+
+  @if (items().length === 0) {
+    <p class="text-muted">No FAQ items yet.</p>
+  } @else {
+    <div class="table-responsive">
+      <table class="table align-middle" aria-label="FAQ items">
+        <caption class="visually-hidden">All FAQ items, including drafts.</caption>
+        <thead>
+          <tr>
+            <th scope="col">Question</th>
+            <th scope="col">Published</th>
+            <th scope="col">Position</th>
+            <th scope="col" class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of items(); track item.id) {
+            <tr>
+              <th scope="row" class="fw-normal">{{ item.question }}</th>
+              <td>{{ item.published ? 'Yes' : 'No' }}</td>
+              <td>{{ item.position }}</td>
+              <td class="text-end">
+                <button type="button" class="btn btn-sm btn-outline-secondary me-2"
+                        (click)="openEdit(item)"
+                        [attr.aria-label]="'Edit ' + item.question">Edit</button>
+                <button type="button" class="btn btn-sm btn-outline-danger"
+                        (click)="confirmDelete(item)"
+                        [attr.aria-label]="'Delete ' + item.question">Delete</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
+
+<ng-template #editModal let-modal>
+  <div class="modal-header">
+    <h2 class="modal-title h5" id="faq-modal-title">{{ editing() ? 'Edit question' : 'New question' }}</h2>
+    <button type="button" class="btn-close" aria-label="Close dialog" (click)="modal.dismiss()"></button>
+  </div>
+  <form [formGroup]="form" (ngSubmit)="save(modal.close)" novalidate>
+    <div class="modal-body">
+      <div class="mb-3">
+        <label for="faq-question" class="form-label">Question</label>
+        <input id="faq-question" class="form-control" formControlName="question" />
+      </div>
+      <div class="mb-3">
+        <label for="faq-answer" class="form-label">Answer</label>
+        <textarea id="faq-answer" rows="4" class="form-control" formControlName="answer"></textarea>
+      </div>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="faq-position" class="form-label">Position</label>
+          <input id="faq-position" type="number" class="form-control" formControlName="position" />
+        </div>
+        <div class="col-md-6 form-check pt-md-4 ps-md-5">
+          <input id="faq-published" type="checkbox" class="form-check-input" formControlName="published" />
+          <label for="faq-published" class="form-check-label">Published</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="form.invalid">Save</button>
+    </div>
+  </form>
+</ng-template>
+
+<ng-template #deleteModal let-modal>
+  <div class="modal-header">
+    <h2 class="modal-title h5" id="faq-delete-title">Delete FAQ item</h2>
+    <button type="button" class="btn-close" aria-label="Close dialog" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <p class="m-0">Delete &ldquo;{{ editing()?.question }}&rdquo;?</p>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">Cancel</button>
+    <button type="button" class="btn btn-danger" (click)="modal.close(true)">Delete</button>
+  </div>
+</ng-template>

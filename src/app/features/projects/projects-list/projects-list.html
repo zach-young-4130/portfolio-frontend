@@ -1,0 +1,17 @@
+<app-page-hero title="Projects" subtitle="Things I've built." image="projects-hero.jpg" />
+
+<section class="container py-5">
+  @if (loading()) {
+    <p role="status" class="text-center">Loading projects&hellip;</p>
+  } @else if (projects().length === 0) {
+    <p class="text-center text-muted">No projects yet.</p>
+  } @else {
+    <div class="row g-4">
+      @for (project of projects(); track project.id) {
+        <div class="col-md-6 col-lg-4">
+          <app-project-card [project]="project" />
+        </div>
+      }
+    </div>
+  }
+</section>

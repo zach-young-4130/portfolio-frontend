@@ -1,0 +1,24 @@
+<app-page-hero title="FAQ" subtitle="Common questions answered." image="faq-hero.jpg" />
+
+<section class="container py-5">
+  @if (loading()) {
+    <p role="status" class="text-center">Loading&hellip;</p>
+  } @else if (items().length === 0) {
+    <p class="text-center text-muted">No FAQ items yet.</p>
+  } @else {
+    <div ngbAccordion class="mx-auto" style="max-width: 720px;" aria-label="Frequently asked questions">
+      @for (item of items(); track item.id) {
+        <div ngbAccordionItem>
+          <h2 ngbAccordionHeader>
+            <button ngbAccordionButton>{{ item.question }}</button>
+          </h2>
+          <div ngbAccordionCollapse>
+            <div ngbAccordionBody>
+              <ng-template>{{ item.answer }}</ng-template>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</section>

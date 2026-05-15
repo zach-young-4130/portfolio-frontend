@@ -1,0 +1,51 @@
+@let p = project();
+
+<article class="card h-100 project-card">
+  @if (p.cover_image_url) {
+    <img
+      [src]="p.cover_image_url"
+      [alt]="p.title + ' cover image'"
+      class="card-img-top project-cover"
+    />
+  }
+
+  <div class="card-body d-flex flex-column">
+    <h3 class="card-title h5">
+      <a [routerLink]="['/projects', p.id]" class="stretched-link">{{ p.title }}</a>
+    </h3>
+    <p class="text-muted small mb-3">{{ p.tagline }}</p>
+
+    <ul class="list-inline mb-3 tech-stack" aria-label="Tech stack">
+      @for (tech of techList(); track tech) {
+        <li class="list-inline-item">
+          <span class="badge tech-badge">{{ tech }}</span>
+        </li>
+      }
+    </ul>
+
+    <div class="mt-auto d-flex gap-2 project-card-actions">
+      @if (p.live_url) {
+        <a
+          [href]="p.live_url"
+          target="_blank"
+          rel="noopener"
+          class="btn btn-sm btn-primary"
+          [attr.aria-label]="'View live demo of ' + p.title"
+        >
+          Live
+        </a>
+      }
+      @if (p.repo_url) {
+        <a
+          [href]="p.repo_url"
+          target="_blank"
+          rel="noopener"
+          class="btn btn-sm btn-outline-secondary"
+          [attr.aria-label]="'View repository for ' + p.title"
+        >
+          Code
+        </a>
+      }
+    </div>
+  </div>
+</article>

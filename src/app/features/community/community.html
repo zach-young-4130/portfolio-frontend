@@ -1,0 +1,42 @@
+<app-page-hero title="Community" subtitle="Where I show up beyond the keyboard." image="community-hero.jpg" />
+
+<section class="container py-5">
+  @if (loading()) {
+    <p role="status" class="text-center">Loading&hellip;</p>
+  } @else if (items().length === 0) {
+    <p class="text-center text-muted">No community items yet.</p>
+  } @else {
+    <div class="row g-4">
+      @for (item of items(); track item.id) {
+        <div class="col-md-6">
+          <article class="community-card h-100 p-4">
+            <h2 class="h5 mb-1">{{ item.title }}</h2>
+            <p class="small text-muted mb-3">
+              @if (item.role) {
+                {{ item.role }}
+              }
+              @if (item.role && item.year) {
+                ·
+              }
+              @if (item.year) {
+                {{ item.year }}
+              }
+            </p>
+            <p class="mb-3">{{ item.description }}</p>
+            @if (item.url) {
+              <a
+                [href]="item.url"
+                target="_blank"
+                rel="noopener"
+                class="small"
+                [attr.aria-label]="'Learn more about ' + item.title"
+              >
+                Learn more &rarr;
+              </a>
+            }
+          </article>
+        </div>
+      }
+    </div>
+  }
+</section>

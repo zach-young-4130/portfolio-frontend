@@ -1,0 +1,10 @@
+<section class="page-hero d-flex align-items-center">
+  <img [src]="image()" alt="" aria-hidden="true" class="page-hero-bg" />
+  <div class="page-hero-overlay" aria-hidden="true"></div>
+  <div class="container text-center page-hero-content">
+    <h1 class="display-3 fw-bold mb-2 header-rise">{{ title() }}</h1>
+    @if (subtitle()) {
+      <p class="lead mb-0 page-hero-subtitle header-rise-delayed">{{ subtitle() }}</p>
+    }
+  </div>
+</section>

@@ -1,0 +1,43 @@
+<section class="container py-5">
+  @if (notFound()) {
+    <p role="alert" class="text-center">
+      Project not found.
+      <a routerLink="/projects" class="ms-2">Back to projects</a>
+    </p>
+  } @else if (project(); as p) {
+    <article>
+      <a routerLink="/projects" class="small text-muted text-decoration-none">&larr; Back to projects</a>
+      <h1 class="display-4 fw-bold mt-3">{{ p.title }}</h1>
+      <p class="lead text-muted">{{ p.tagline }}</p>
+
+      @if (p.cover_image_url) {
+        <img [src]="p.cover_image_url" [alt]="p.title + ' cover image'" class="img-fluid rounded my-4" />
+      }
+
+      <h2 class="h5 mt-4">Tech stack</h2>
+      <ul class="list-inline mb-4" aria-label="Tech stack">
+        @for (tech of techList(); track tech) {
+          <li class="list-inline-item">
+            <span class="badge tech-badge">{{ tech }}</span>
+          </li>
+        }
+      </ul>
+
+      <h2 class="h5">About this project</h2>
+      <p class="project-description">{{ p.description }}</p>
+
+      <div class="d-flex gap-3 mt-4">
+        @if (p.live_url) {
+          <a [href]="p.live_url" target="_blank" rel="noopener" class="btn btn-primary"
+             [attr.aria-label]="'Open live demo for ' + p.title">View Live</a>
+        }
+        @if (p.repo_url) {
+          <a [href]="p.repo_url" target="_blank" rel="noopener" class="btn btn-outline-secondary"
+             [attr.aria-label]="'Open repository for ' + p.title">View Code</a>
+        }
+      </div>
+    </article>
+  } @else {
+    <p role="status" class="text-center">Loading&hellip;</p>
+  }
+</section>

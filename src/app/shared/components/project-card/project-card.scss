@@ -1,0 +1,45 @@
+:host {
+  display: block;
+}
+
+.project-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  color: var(--fg);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+  }
+}
+
+.project-cover {
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.card-title a {
+  color: var(--fg);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--accent);
+  }
+}
+
+.tech-stack {
+  position: relative;
+  z-index: 2;
+}
+
+.tech-badge {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent-dark);
+  font-weight: 500;
+}
+
+.project-card-actions {
+  position: relative;
+  z-index: 2;
+}

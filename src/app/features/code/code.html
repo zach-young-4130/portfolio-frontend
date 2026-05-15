@@ -1,0 +1,331 @@
+<app-page-hero
+  title="Code"
+  subtitle="Under the hood — patterns and snippets I'm proud of."
+  image="code-hero.jpg"
+/>
+
+<section class="container py-5">
+  <p class="lead mb-5">
+    A guided tour of this site's source. The trees below show the shape of the
+    front-end and back-end. The snippets after them are the bits I think are
+    worth pointing at — small ideas, idioms I keep reaching for, or patterns
+    that took a beat to land on. Living document; I'll keep adding when
+    something interesting shows up.
+  </p>
+
+  <h2 class="h3 mt-5 mb-3">Front-end (Angular 21 + SSR)</h2>
+  <p class="text-secondary">
+    Standalone-first, signal-driven, lazy-loaded. Bootstrap 5 with
+    <code>data-bs-theme</code> wired into a <code>ThemeService</code> so light
+    and dark mode swap with a single class on <code>&lt;html&gt;</code>.
+  </p>
+<pre class="code-tree"><code>portfolio-frontend/
+├── src/
+│   ├── app/
+│   │   ├── core/                    # singletons, guards, interceptors, models
+│   │   │   ├── guards/
+│   │   │   │   └── auth.guard.ts
+│   │   │   ├── interceptors/
+│   │   │   │   └── credentials.interceptor.ts
+│   │   │   ├── models/              # typed interfaces (Project, FaqItem, …)
+│   │   │   └── services/            # api, auth, theme, feature services
+│   │   ├── shared/
+│   │   │   └── components/
+│   │   │       ├── navbar/
+│   │   │       ├── footer/
+│   │   │       ├── project-card/
+│   │   │       ├── page-hero/       # reused across all sub-pages
+│   │   │       └── contact-form/    # used by /contact and home
+│   │   ├── features/                # lazy-loaded route bundles
+│   │   │   ├── home/
+│   │   │   ├── projects/
+│   │   │   │   ├── projects-list/
+│   │   │   │   └── project-detail/
+│   │   │   ├── faq/
+│   │   │   ├── community/
+│   │   │   ├── contact/
+│   │   │   ├── code/                # this page
+│   │   │   └── admin/
+│   │   │       ├── login/
+│   │   │       ├── dashboard/
+│   │   │       ├── projects/
+│   │   │       ├── faq/
+│   │   │       ├── community/
+│   │   │       └── messages/
+│   │   ├── app.config.ts            # standalone providers, http, hydration
+│   │   ├── app.routes.ts            # lazy routes + authGuard on /admin
+│   │   └── app.ts                   # root component
+│   ├── styles.scss                  # bootstrap import + theme tokens
+│   └── main.ts / main.server.ts     # browser + SSR bootstrap
+└── public/                          # static hero images (served at /)
+</code></pre>
+
+  <h2 class="h3 mt-5 mb-3">Back-end (Rails 8 API-only)</h2>
+  <p class="text-secondary">
+    Versioned namespace, every endpoint documented by an rswag request spec
+    that emits <code>swagger/v1/swagger.yaml</code> as a side effect. Auth is a
+    single admin user, sessions in httpOnly cookies, no CSRF middleware —
+    defense rests on the CORS allowlist plus JSON content-type forcing a
+    preflight.
+  </p>
+<pre class="code-tree"><code>portfolio-api/
+├── app/
+│   ├── controllers/
+│   │   ├── concerns/
+│   │   │   └── authentication.rb        # current_user, login, logout
+│   │   └── api/
+│   │       └── v1/
+│   │           ├── base_controller.rb   # before_action :authenticate!
+│   │           │                        # + visible_scope_for(model)
+│   │           ├── sessions_controller.rb
+│   │           ├── projects_controller.rb
+│   │           ├── faq_items_controller.rb
+│   │           ├── community_items_controller.rb
+│   │           └── contact_messages_controller.rb
+│   └── models/
+│       ├── user.rb                      # has_secure_password
+│       ├── project.rb                   # featured / published scopes
+│       ├── faq_item.rb
+│       ├── community_item.rb
+│       └── contact_message.rb           # email format + normalize
+├── config/
+│   ├── routes.rb                        # /api/v1 namespace
+│   ├── application.rb                   # cookies + session re-added on api_only
+│   └── initializers/
+│       └── cors.rb                      # localhost:4200 allowlist, credentials: true
+├── db/
+│   ├── migrate/                         # null:false + indexes on the columns
+│   ├── schema.rb                        #   that get filtered/looked-up
+│   └── seeds.rb                         # idempotent admin + sample content
+├── spec/
+│   ├── factories/
+│   ├── models/
+│   ├── requests/api/v1/                 # rswag DSL — also generates the swagger
+│   └── support/
+│       └── auth_helpers.rb              # login_as helper for request specs
+└── swagger/v1/swagger.yaml              # ← generated, don't hand-edit
+</code></pre>
+
+  <hr class="my-5" />
+
+  <h2 class="h3 mb-4">Snippets I want to point at</h2>
+
+  <article class="snippet">
+    <h3 class="h5">1. Auth-aware scope on the API base controller</h3>
+    <p class="text-secondary">
+      Public callers see only published records. The same URL returns drafts to
+      an authenticated admin. One method on <code>BaseController</code>, three
+      controllers reuse it.
+    </p>
+<pre class="code-snippet"><code># app/controllers/api/v1/base_controller.rb
+def visible_scope_for(model_class)
+  current_user ? model_class.order(:position) : model_class.published
+end
+
+# usage
+def index
+  render json: {{ '{' }} projects: visible_scope_for(Project).map {{ '{' }} |p| serialize(p) {{ '}' }} {{ '}' }}
+end</code></pre>
+  </article>
+
+  <article class="snippet">
+    <h3 class="h5">2. The HTTP credentials interceptor</h3>
+    <p class="text-secondary">
+      One line of belt-and-suspenders. Combined with
+      <code>{{ '{' }} withCredentials: true {{ '}' }}</code> already set in <code>ApiService</code>, every
+      outbound request carries the Rails session cookie — even the ones I
+      forget to think about.
+    </p>
+<pre class="code-snippet"><code>// core/interceptors/credentials.interceptor.ts
+export const credentialsInterceptor: HttpInterceptorFn = (req, next) =&gt;
+  next(req.clone({{ '{' }} withCredentials: true {{ '}' }}));</code></pre>
+  </article>
+
+  <article class="snippet">
+    <h3 class="h5">3. ThemeService — one effect syncs three things</h3>
+    <p class="text-secondary">
+      <code>signal()</code> for state, <code>effect()</code> for side-effects.
+      Every theme change updates my own custom-property class, Bootstrap's
+      <code>data-bs-theme</code> attribute, and <code>localStorage</code> in
+      one pass. SSR-safe via <code>isPlatformBrowser</code>.
+    </p>
+<pre class="code-snippet"><code>constructor() {{ '{' }}
+  effect(() =&gt; {{ '{' }}
+    const t = this._theme();
+    const root = this.doc.documentElement;
+    root.classList.remove('theme-light', 'theme-dark');
+    root.classList.add(`theme-${{ '$' }}{{ '{' }}t{{ '}' }}`);
+    root.setAttribute('data-bs-theme', t);
+    if (isPlatformBrowser(this.platformId)) {{ '{' }}
+      localStorage.setItem('theme', t);
+    {{ '}' }}
+  {{ '}' }});
+{{ '}' }}</code></pre>
+  </article>
+
+  <article class="snippet">
+    <h3 class="h5">4. authGuard — return a UrlTree, not a navigate()</h3>
+    <p class="text-secondary">
+      Functional guards. Returning a <code>UrlTree</code> lets Angular handle
+      the redirect itself, which means no race conditions with the route's own
+      navigation and no imperative <code>router.navigate()</code> hiding inside
+      a guard.
+    </p>
+<pre class="code-snippet"><code>// core/guards/auth.guard.ts
+export const authGuard: CanActivateFn = () =&gt; {{ '{' }}
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  return auth.isAuthenticated()
+    ? true
+    : router.createUrlTree(['/admin/login']);
+{{ '}' }};</code></pre>
+  </article>
+
+  <article class="snippet">
+    <h3 class="h5">5. rswag — the request spec IS the API doc</h3>
+    <p class="text-secondary">
+      Every endpoint has a request spec in the rswag DSL. The same file runs
+      assertions <em>and</em> emits <code>swagger/v1/swagger.yaml</code>.
+      "Document the API later" is no longer a thing on this codebase.
+    </p>
+<pre class="code-snippet"><code># spec/requests/api/v1/projects_spec.rb
+path "/api/v1/projects" do
+  get("List projects (published only when public; all when authenticated)") do
+    tags "Projects"
+    produces "application/json"
+
+    response(200, "ok") do
+      schema type: :object,
+             properties: {{ '{' }} projects: {{ '{' }} type: :array, items: PROJECT_SCHEMA {{ '}' }} {{ '}' }},
+             required: %w[projects]
+
+      before do
+        create(:project, title: "Public", published: true)
+        create(:project, title: "Hidden Draft", published: false)
+      end
+
+      run_test! do |response|
+        titles = JSON.parse(response.body)["projects"].map {{ '{' }} |p| p["title"] {{ '}' }}
+        expect(titles).to include("Public")
+        expect(titles).not_to include("Hidden Draft")
+      end
+    end
+  end
+end</code></pre>
+  </article>
+
+  <article class="snippet">
+    <h3 class="h5">6. Re-adding cookies to an API-only Rails app</h3>
+    <p class="text-secondary">
+      <code>config.api_only = true</code> strips out the cookie + session
+      middleware. For an SPA with cross-origin auth, you re-add them.
+      <code>SameSite=None</code> lets the browser send the cookie cross-site;
+      <code>Secure</code> only flips on in production because localhost is
+      plain HTTP.
+    </p>
+<pre class="code-snippet"><code># config/application.rb
+config.api_only = true
+
+config.middleware.use ActionDispatch::Cookies
+config.middleware.use ActionDispatch::Session::CookieStore,
+  key: "_portfolio_api_session",
+  same_site: :none,
+  secure: Rails.env.production?</code></pre>
+  </article>
+
+  <article class="snippet">
+    <h3 class="h5">7. CORS — the only thing standing between the world and the API</h3>
+    <p class="text-secondary">
+      No CSRF middleware. The CORS allowlist plus the frontend's
+      <code>Content-Type: application/json</code> forces a preflight that an
+      arbitrary attacker origin can't pass. Cheaper than full form-token
+      plumbing and no surprises for the SPA.
+    </p>
+<pre class="code-snippet"><code># config/initializers/cors.rb
+Rails.application.config.middleware.insert_before 0, Rack::Cors do
+  allow do
+    origins "http://localhost:4200", "http://127.0.0.1:4200"
+
+    resource "*",
+      headers: :any,
+      expose:  %w[Authorization],
+      methods: %i[get post put patch delete options head],
+      credentials: true
+  end
+end</code></pre>
+  </article>
+
+  <article class="snippet">
+    <h3 class="h5">8. PageHero — signal inputs with a default</h3>
+    <p class="text-secondary">
+      Modern Angular signal-based inputs.
+      <code>input.required&lt;string&gt;()</code> for the unavoidable ones,
+      <code>input&lt;string&gt;('default')</code> for the overridable ones.
+      Same component renders the hero on Projects, Code, FAQ, Community, and
+      Contact — five lines of HTML to swap an image per page.
+    </p>
+<pre class="code-snippet"><code>// shared/components/page-hero/page-hero.ts
+export class PageHeroComponent {{ '{' }}
+  title = input.required&lt;string&gt;();
+  subtitle = input&lt;string&gt;('');
+  image = input&lt;string&gt;('sub-hero.jpg');
+{{ '}' }}
+
+// usage
+&lt;app-page-hero
+  title="Projects"
+  subtitle="Things I've built."
+  image="projects-hero.jpg" /&gt;</code></pre>
+  </article>
+
+  <article class="snippet">
+    <h3 class="h5">9. ActiveRecord <code>normalizes:</code> (Rails 7.1+)</h3>
+    <p class="text-secondary">
+      Built-in attribute normalization. No <code>before_validation</code>
+      callback, no custom setter, no "is the email lower-cased on this read or
+      that one" inconsistency.
+    </p>
+<pre class="code-snippet"><code># app/models/contact_message.rb
+class ContactMessage &lt; ApplicationRecord
+  normalizes :name, :message, with: -&gt;(v) {{ '{' }} v.strip {{ '}' }}
+  normalizes :email,           with: -&gt;(v) {{ '{' }} v.strip.downcase {{ '}' }}
+
+  validates :name, :message, presence: true
+  validates :email, presence: true,
+                    format: {{ '{' }} with: URI::MailTo::EMAIL_REGEXP {{ '}' }}
+end</code></pre>
+  </article>
+
+  <article class="snippet">
+    <h3 class="h5">10. Theme tokens — CSS custom properties, not Sass variables</h3>
+    <p class="text-secondary">
+      Sass variables resolve at build time and don't react to a class change.
+      CSS custom properties resolve at runtime. Switching one class on
+      <code>&lt;html&gt;</code> recolors every component without a single
+      runtime style recalc in JS.
+    </p>
+<pre class="code-snippet"><code>// styles.scss
+:root, .theme-light {{ '{' }}
+  --bg:          #ffffff;
+  --bg-surface:  #f8f9fa;
+  --fg:          #111111;
+  --accent:      #4b9cd3;
+{{ '}' }}
+
+.theme-dark {{ '{' }}
+  --bg:          #18181b;
+  --bg-surface:  #27272a;
+  --fg:          #fafafa;
+  --accent:      #4b9cd3;
+{{ '}' }}
+
+// any component
+.card {{ '{' }} background: var(--bg-surface); color: var(--fg); {{ '}' }}</code></pre>
+  </article>
+
+  <p class="text-secondary mt-5 mb-0">
+    More to come. If you spot something in the source you'd like a closer look
+    at, the whole thing is on
+    <a href="https://github.com/" target="_blank" rel="noopener">GitHub</a>.
+  </p>
+</section>

@@ -1,0 +1,97 @@
+<section class="hero d-flex align-items-center" aria-labelledby="hero-heading">
+  <img src="hero.jpg" alt="" aria-hidden="true" class="hero-bg" />
+  <div class="hero-overlay" aria-hidden="true"></div>
+  <div class="container text-center hero-content">
+    <p class="text-uppercase small mb-3 hero-eyebrow header-rise">Hello, I'm</p>
+    <h1 id="hero-heading" class="display-2 fw-bold mb-3 header-rise">
+      <span class="hero-name">Zach Young</span>
+    </h1>
+    <p class="lead mb-4 hero-subtitle header-rise-delayed">Full-Stack Developer</p>
+    <div class="d-flex justify-content-center gap-3">
+      <a routerLink="/projects" class="btn btn-primary btn-lg hero-cta">View Projects</a>
+      <a routerLink="/contact" class="btn btn-outline-light btn-lg hero-cta">Contact Me</a>
+    </div>
+  </div>
+</section>
+
+@if (featured().length > 0) {
+  <section class="py-5" aria-labelledby="featured-heading">
+    <div class="container">
+      <h2 id="featured-heading" class="h2 mb-4 text-center">Featured Projects</h2>
+      <div class="row g-4">
+        @for (project of featured(); track project.id) {
+          <div class="col-md-6 col-lg-4">
+            <app-project-card [project]="project" />
+          </div>
+        }
+      </div>
+      <div class="text-center mt-4">
+        <a routerLink="/projects" class="btn btn-outline-primary">See all projects</a>
+      </div>
+    </div>
+  </section>
+}
+
+@if (topFaqs().length > 0) {
+  <section class="py-5 section-surface" aria-labelledby="faq-heading">
+    <div class="container">
+      <h2 id="faq-heading" class="h2 mb-4 text-center">Frequently Asked</h2>
+      <div ngbAccordion class="mx-auto" style="max-width: 720px;">
+        @for (item of topFaqs(); track item.id) {
+          <div ngbAccordionItem>
+            <h3 ngbAccordionHeader>
+              <button ngbAccordionButton>{{ item.question }}</button>
+            </h3>
+            <div ngbAccordionCollapse>
+              <div ngbAccordionBody>
+                <ng-template>{{ item.answer }}</ng-template>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+      <div class="text-center mt-4">
+        <a routerLink="/faq" class="btn btn-outline-primary">All questions</a>
+      </div>
+    </div>
+  </section>
+}
+
+@if (topCommunity().length > 0) {
+  <section class="py-5" aria-labelledby="community-heading">
+    <div class="container">
+      <h2 id="community-heading" class="h2 mb-4 text-center">Community</h2>
+      <div class="row g-4">
+        @for (item of topCommunity(); track item.id) {
+          <div class="col-md-6">
+            <article class="community-mini h-100">
+              <h3 class="h5 mb-1">{{ item.title }}</h3>
+              <p class="small text-muted mb-2">
+                @if (item.role) {
+                  {{ item.role }}
+                }
+                @if (item.role && item.year) {
+                  ·
+                }
+                @if (item.year) {
+                  {{ item.year }}
+                }
+              </p>
+              <p class="mb-0">{{ item.description }}</p>
+            </article>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+}
+
+<section class="py-5 section-surface" aria-labelledby="home-contact-heading">
+  <div class="container">
+    <header class="text-center mb-4">
+      <h2 id="home-contact-heading" class="h2">Get in touch</h2>
+      <p class="text-muted mb-0">Have a project in mind? I'd love to hear about it.</p>
+    </header>
+    <app-contact-form />
+  </div>
+</section>

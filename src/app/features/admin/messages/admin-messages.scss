@@ -1,0 +1,10 @@
+:host {
+  display: block;
+}
+
+.message-cell {
+  max-width: 30rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

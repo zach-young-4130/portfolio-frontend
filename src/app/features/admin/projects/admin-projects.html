@@ -1,0 +1,133 @@
+<section class="container py-5">
+  <header class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2 m-0">Manage Projects</h1>
+    <button type="button" class="btn btn-primary" (click)="openNew()">New project</button>
+  </header>
+
+  @if (projects().length === 0) {
+    <p class="text-muted">No projects yet.</p>
+  } @else {
+    <div class="table-responsive">
+      <table class="table align-middle" aria-label="Projects">
+        <caption class="visually-hidden">All portfolio projects, including drafts.</caption>
+        <thead>
+          <tr>
+            <th scope="col">Title</th>
+            <th scope="col">Published</th>
+            <th scope="col">Featured</th>
+            <th scope="col">Position</th>
+            <th scope="col" class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (project of projects(); track project.id) {
+            <tr>
+              <th scope="row" class="fw-normal">{{ project.title }}</th>
+              <td>{{ project.published ? 'Yes' : 'No' }}</td>
+              <td>{{ project.featured ? 'Yes' : 'No' }}</td>
+              <td>{{ project.position }}</td>
+              <td class="text-end">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-secondary me-2"
+                  (click)="openEdit(project)"
+                  [attr.aria-label]="'Edit ' + project.title"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-danger"
+                  (click)="confirmDelete(project)"
+                  [attr.aria-label]="'Delete ' + project.title"
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
+
+<ng-template #editModal let-modal>
+  <div class="modal-header">
+    <h2 class="modal-title h5" id="project-modal-title">
+      {{ editing() ? 'Edit project' : 'New project' }}
+    </h2>
+    <button
+      type="button"
+      class="btn-close"
+      aria-label="Close dialog"
+      (click)="modal.dismiss()"
+    ></button>
+  </div>
+  <form [formGroup]="form" (ngSubmit)="save(modal.close)" novalidate>
+    <div class="modal-body">
+      <div class="mb-3">
+        <label for="proj-title" class="form-label">Title</label>
+        <input id="proj-title" class="form-control" formControlName="title" />
+      </div>
+      <div class="mb-3">
+        <label for="proj-tagline" class="form-label">Tagline</label>
+        <input id="proj-tagline" class="form-control" formControlName="tagline" />
+      </div>
+      <div class="mb-3">
+        <label for="proj-description" class="form-label">Description</label>
+        <textarea id="proj-description" rows="4" class="form-control" formControlName="description"></textarea>
+      </div>
+      <div class="mb-3">
+        <label for="proj-tech" class="form-label">Tech stack (comma-separated)</label>
+        <input id="proj-tech" class="form-control" formControlName="tech_stack" />
+      </div>
+      <div class="mb-3">
+        <label for="proj-cover" class="form-label">Cover image URL</label>
+        <input id="proj-cover" class="form-control" formControlName="cover_image_url" />
+      </div>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="proj-live" class="form-label">Live URL</label>
+          <input id="proj-live" class="form-control" formControlName="live_url" />
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="proj-repo" class="form-label">Repo URL</label>
+          <input id="proj-repo" class="form-control" formControlName="repo_url" />
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-4 mb-3">
+          <label for="proj-position" class="form-label">Position</label>
+          <input id="proj-position" type="number" class="form-control" formControlName="position" />
+        </div>
+        <div class="col-md-4 form-check pt-md-4 ps-md-5">
+          <input id="proj-featured" type="checkbox" class="form-check-input" formControlName="featured" />
+          <label for="proj-featured" class="form-check-label">Featured</label>
+        </div>
+        <div class="col-md-4 form-check pt-md-4 ps-md-5">
+          <input id="proj-published" type="checkbox" class="form-check-input" formControlName="published" />
+          <label for="proj-published" class="form-check-label">Published</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="form.invalid">Save</button>
+    </div>
+  </form>
+</ng-template>
+
+<ng-template #deleteModal let-modal>
+  <div class="modal-header">
+    <h2 class="modal-title h5" id="delete-modal-title">Delete project</h2>
+    <button type="button" class="btn-close" aria-label="Close dialog" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <p class="m-0">Are you sure you want to delete &ldquo;{{ editing()?.title }}&rdquo;? This cannot be undone.</p>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">Cancel</button>
+    <button type="button" class="btn btn-danger" (click)="modal.close(true)">Delete</button>
+  </div>
+</ng-template>

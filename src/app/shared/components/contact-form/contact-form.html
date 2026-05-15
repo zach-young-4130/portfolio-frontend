@@ -1,0 +1,102 @@
+<div class="mx-auto" style="max-width: 560px">
+  @if (sent()) {
+    <div role="status" class="alert alert-success">Thanks &mdash; your message is on its way.</div>
+  }
+
+  @if (errorMessage(); as msg) {
+    <div role="alert" class="alert alert-danger">{{ msg }}</div>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="mb-3">
+      <label for="contact-form-name" class="form-label">Name</label>
+      <input
+        id="contact-form-name"
+        type="text"
+        class="form-control"
+        formControlName="name"
+        autocomplete="name"
+        [attr.aria-invalid]="
+          form.controls.name.invalid && form.controls.name.touched ? 'true' : null
+        "
+        aria-describedby="contact-form-name-error"
+      />
+      @if (form.controls.name.invalid && form.controls.name.touched) {
+        <p id="contact-form-name-error" class="form-text text-danger" role="alert">
+          Please enter your name.
+        </p>
+      }
+    </div>
+
+    <div class="mb-3">
+      <label for="contact-form-email" class="form-label">Email</label>
+      <input
+        id="contact-form-email"
+        type="email"
+        class="form-control"
+        formControlName="email"
+        autocomplete="email"
+        [attr.aria-invalid]="
+          form.controls.email.invalid && form.controls.email.touched ? 'true' : null
+        "
+        aria-describedby="contact-form-email-error"
+      />
+      @if (form.controls.email.invalid && form.controls.email.touched) {
+        <p id="contact-form-email-error" class="form-text text-danger" role="alert">
+          Please enter a valid email.
+        </p>
+      }
+    </div>
+
+    <div class="mb-3">
+      <label for="contact-form-email" class="form-label">Project Name</label>
+      <input
+        id="contact-form-project-name"
+        type="text"
+        class="form-control"
+        formControlName="project_name"
+        [attr.aria-invalid]="
+          form.controls.project_name.invalid && form.controls.project_name.touched ? 'true' : null
+        "
+        aria-describedby="contact-form-project-name-error"
+      />
+      @if (form.controls.project_name.invalid && form.controls.project_name.touched) {
+        <p id="contact-form-project-name-error" class="form-text text-danger" role="alert">
+          Please enter a minimum of 3 characters and a maximum of 100 characters.
+        </p>
+      }
+    </div>
+
+    <div class="mb-3">
+      <label for="contact-form-message" class="form-label">Message</label>
+      <textarea
+        id="contact-form-message"
+        rows="5"
+        class="form-control"
+        formControlName="message"
+        [attr.aria-invalid]="
+          form.controls.message.invalid && form.controls.message.touched ? 'true' : null
+        "
+        aria-describedby="contact-form-message-error"
+      ></textarea>
+      @if (form.controls.message.invalid && form.controls.message.touched) {
+        <p id="contact-form-message-error" class="form-text text-danger" role="alert">
+          Please write at least 10 characters.
+        </p>
+      }
+    </div>
+
+    <button
+      type="submit"
+      class="btn btn-primary btn-lg"
+      [disabled]="form.invalid || submitting()"
+      [attr.aria-disabled]="form.invalid || submitting() ? 'true' : null"
+    >
+      @if (submitting()) {
+        Sending&hellip;
+      } @else {
+        Send message
+      }
+    </button>
+  </form>
+</div>

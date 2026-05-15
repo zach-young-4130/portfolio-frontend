@@ -1,0 +1,104 @@
+<section class="container py-5">
+  <header class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2 m-0">Manage Community</h1>
+    <button type="button" class="btn btn-primary" (click)="openNew()">New entry</button>
+  </header>
+
+  @if (items().length === 0) {
+    <p class="text-muted">No community items yet.</p>
+  } @else {
+    <div class="table-responsive">
+      <table class="table align-middle" aria-label="Community items">
+        <caption class="visually-hidden">All community involvements, including drafts.</caption>
+        <thead>
+          <tr>
+            <th scope="col">Title</th>
+            <th scope="col">Role</th>
+            <th scope="col">Year</th>
+            <th scope="col">Published</th>
+            <th scope="col" class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of items(); track item.id) {
+            <tr>
+              <th scope="row" class="fw-normal">{{ item.title }}</th>
+              <td>{{ item.role }}</td>
+              <td>{{ item.year }}</td>
+              <td>{{ item.published ? 'Yes' : 'No' }}</td>
+              <td class="text-end">
+                <button type="button" class="btn btn-sm btn-outline-secondary me-2"
+                        (click)="openEdit(item)"
+                        [attr.aria-label]="'Edit ' + item.title">Edit</button>
+                <button type="button" class="btn btn-sm btn-outline-danger"
+                        (click)="confirmDelete(item)"
+                        [attr.aria-label]="'Delete ' + item.title">Delete</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
+
+<ng-template #editModal let-modal>
+  <div class="modal-header">
+    <h2 class="modal-title h5" id="community-modal-title">{{ editing() ? 'Edit entry' : 'New entry' }}</h2>
+    <button type="button" class="btn-close" aria-label="Close dialog" (click)="modal.dismiss()"></button>
+  </div>
+  <form [formGroup]="form" (ngSubmit)="save(modal.close)" novalidate>
+    <div class="modal-body">
+      <div class="mb-3">
+        <label for="comm-title" class="form-label">Title</label>
+        <input id="comm-title" class="form-control" formControlName="title" />
+      </div>
+      <div class="mb-3">
+        <label for="comm-description" class="form-label">Description</label>
+        <textarea id="comm-description" rows="4" class="form-control" formControlName="description"></textarea>
+      </div>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="comm-role" class="form-label">Role</label>
+          <input id="comm-role" class="form-control" formControlName="role" />
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="comm-year" class="form-label">Year</label>
+          <input id="comm-year" class="form-control" formControlName="year" />
+        </div>
+      </div>
+      <div class="mb-3">
+        <label for="comm-url" class="form-label">URL</label>
+        <input id="comm-url" class="form-control" formControlName="url" />
+      </div>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="comm-position" class="form-label">Position</label>
+          <input id="comm-position" type="number" class="form-control" formControlName="position" />
+        </div>
+        <div class="col-md-6 form-check pt-md-4 ps-md-5">
+          <input id="comm-published" type="checkbox" class="form-check-input" formControlName="published" />
+          <label for="comm-published" class="form-check-label">Published</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="form.invalid">Save</button>
+    </div>
+  </form>
+</ng-template>
+
+<ng-template #deleteModal let-modal>
+  <div class="modal-header">
+    <h2 class="modal-title h5" id="community-delete-title">Delete community entry</h2>
+    <button type="button" class="btn-close" aria-label="Close dialog" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <p class="m-0">Delete &ldquo;{{ editing()?.title }}&rdquo;?</p>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">Cancel</button>
+    <button type="button" class="btn btn-danger" (click)="modal.close(true)">Delete</button>
+  </div>
+</ng-template>
