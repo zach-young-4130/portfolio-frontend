@@ -1,25 +1,34 @@
 import { Injectable, inject } from '@angular/core';
+import { map } from 'rxjs';
 import { ApiService } from './api.service';
-import { Project } from '../models/project.model';
+import { Project, ProjectData } from '../models/project.model';
 
 @Injectable({ providedIn: 'root' })
 export class ProjectsService {
   private api = inject(ApiService);
 
   list() {
-    return this.api.get<{ projects: Project[] }>('projects');
+    return this.api
+      .get<{ projects: ProjectData[] }>('projects')
+      .pipe(map((res) => ({ projects: res.projects.map((p) => new Project(p)) })));
   }
 
   get(id: number) {
-    return this.api.get<{ project: Project }>(`projects/${id}`);
+    return this.api
+      .get<{ project: ProjectData }>(`projects/${id}`)
+      .pipe(map((res) => ({ project: new Project(res.project) })));
   }
 
-  create(data: Partial<Project>) {
-    return this.api.post<{ project: Project }>('projects', { project: data });
+  create(data: Partial<ProjectData>) {
+    return this.api
+      .post<{ project: ProjectData }>('projects', { project: data })
+      .pipe(map((res) => ({ project: new Project(res.project) })));
   }
 
-  update(id: number, data: Partial<Project>) {
-    return this.api.patch<{ project: Project }>(`projects/${id}`, { project: data });
+  update(id: number, data: Partial<ProjectData>) {
+    return this.api
+      .patch<{ project: ProjectData }>(`projects/${id}`, { project: data })
+      .pipe(map((res) => ({ project: new Project(res.project) })));
   }
 
   remove(id: number) {

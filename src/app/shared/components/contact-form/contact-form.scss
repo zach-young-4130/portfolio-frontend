@@ -1,3 +1,8 @@
 :host {
   display: block;
 }
+
+.form-control::placeholder {
+  color: var(--fg-muted);
+  opacity: 1;
+}

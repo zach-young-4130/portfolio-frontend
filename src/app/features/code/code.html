@@ -30,12 +30,14 @@
 │   │   │   ├── models/              # typed interfaces (Project, FaqItem, …)
 │   │   │   └── services/            # api, auth, theme, feature services
 │   │   ├── shared/
-│   │   │   └── components/
-│   │   │       ├── navbar/
-│   │   │       ├── footer/
-│   │   │       ├── project-card/
-│   │   │       ├── page-hero/       # reused across all sub-pages
-│   │   │       └── contact-form/    # used by /contact and home
+│   │   │   ├── components/
+│   │   │   │   ├── navbar/
+│   │   │   │   ├── footer/
+│   │   │   │   ├── project-card/
+│   │   │   │   ├── page-hero/       # reused across all sub-pages
+│   │   │   │   └── contact-form/    # used by /contact and home
+│   │   │   └── directives/
+│   │   │       └── parallax.directive.ts   # SSR-safe scroll parallax
 │   │   ├── features/                # lazy-loaded route bundles
 │   │   │   ├── home/
 │   │   │   ├── projects/
@@ -336,6 +338,96 @@ end</code></pre>
 
 // any component
 .card {{ '{' }} background: var(--bg-surface); color: var(--fg); {{ '}' }}</code></pre>
+  </article>
+
+  <article class="snippet">
+    <h3 class="h5">11. ParallaxDirective — afterNextRender, signal inputs, reduced-motion</h3>
+    <p class="text-secondary">
+      Browser-only setup without an <code>isPlatformBrowser</code> guard:
+      <code>afterNextRender</code> only runs in the browser, so the scroll
+      listener never registers during SSR. Signal <code>input()</code> with an
+      alias keeps the public attribute terse, rAF throttling caps work at one
+      update per frame, and the whole effect opts out under
+      <code>prefers-reduced-motion: reduce</code>.
+    </p>
+<pre class="code-snippet"><code>// shared/directives/parallax.directive.ts
+@Directive({{ '{' }} selector: '[appParallax]', standalone: true {{ '}' }})
+export class ParallaxDirective {{ '{' }}
+  readonly factor = input(0.3, {{ '{' }} alias: 'appParallax' {{ '}' }});
+
+  constructor() {{ '{' }}
+    afterNextRender(() =&gt; {{ '{' }}
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      let ticking = false;
+      const update = () =&gt; {{ '{' }}
+        // translate3d clamped to ±factor * viewportH (no overflow past section)
+        ticking = false;
+      {{ '}' }};
+      window.addEventListener('scroll', () =&gt; {{ '{' }}
+        if (!ticking) {{ '{' }} ticking = true; requestAnimationFrame(update); {{ '}' }}
+      {{ '}' }}, {{ '{' }} passive: true {{ '}' }});
+    {{ '}' }});
+  {{ '}' }}
+{{ '}' }}</code></pre>
+  </article>
+
+  <article class="snippet">
+    <h3 class="h5">12. Project — from interface to class with a <code>time_ago</code> field</h3>
+    <p class="text-secondary">
+      The frontend's <code>Project</code> graduated from a structural
+      <code>interface</code> to a real class so it can carry behavior.
+      <code>ProjectData</code> still describes the raw API shape; the class
+      wraps it, exposes user-set <code>project_start</code> /
+      <code>project_end</code> dates from the backend, and computes
+      <code>time_ago</code> once in the constructor against
+      <code>project_end</code>. Everything is <code>readonly</code> — the
+      value is deterministic at construction, so a stored field is cheaper
+      than a getter and reads the same in templates:
+      <code>{{ '{' }}{{ '{' }} project.time_ago {{ '}' }}{{ '}' }}</code>.
+      The <code>ProjectsService</code> maps every API response through
+      <code>new Project(p)</code> so consumers always receive real instances.
+    </p>
+<pre class="code-snippet"><code>// core/models/project.model.ts
+export interface ProjectData {{ '{' }}
+  id: number;
+  title: string;
+  // …
+  project_start: string | null;   // 'YYYY-MM-DD' from the API
+  project_end:   string | null;
+{{ '}' }}
+
+export class Project {{ '{' }}
+  readonly id: number;
+  readonly title: string;
+  // …
+  readonly project_start: string | null;
+  readonly project_end: string | null;
+  readonly time_ago: string;
+
+  constructor(data: ProjectData, now: Date = new Date()) {{ '{' }}
+    this.id = data.id;
+    this.title = data.title;
+    // …copy the rest…
+    this.project_start = data.project_start;
+    this.project_end   = data.project_end;
+    this.time_ago = Project.computeTimeAgo(now, data.project_end);
+  {{ '}' }}
+
+  private static computeTimeAgo(now: Date, project_end: string | null): string {{ '{' }}
+    if (!project_end) return '';
+    const days = Math.floor((now.getTime() - new Date(project_end).getTime()) / 86_400_000);
+    if (days &lt; 1) return 'today';
+    if (days &lt; 7) return days + ' day' + (days === 1 ? '' : 's') + ' ago';
+    // …walks days → weeks → months → years and picks the right unit
+  {{ '}' }}
+{{ '}' }}
+
+// core/services/projects.service.ts
+list() {{ '{' }}
+  return this.api.get&lt;{{ '{' }} projects: ProjectData[] {{ '}' }}&gt;('projects').pipe(
+    map((res) =&gt; ({{ '{' }} projects: res.projects.map((p) =&gt; new Project(p)) {{ '}' }})),
+  );
+{{ '}' }}</code></pre>
   </article>
 
   <p class="text-secondary mt-5 mb-0">

@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { ProjectCardComponent } from './project-card';
 import { Project } from '../../../core/models/project.model';
 
-const project: Project = {
+const project = new Project({
   id: 1,
   title: 'Awesome',
   tagline: 'A nice tagline',
@@ -15,7 +15,9 @@ const project: Project = {
   featured: true,
   position: 1,
   published: true,
-};
+  project_start: '2024-06-01',
+  project_end: '2024-12-15',
+});
 
 describe('ProjectCardComponent', () => {
   beforeEach(async () => {

@@ -1,5 +1,5 @@
 <section class="hero d-flex align-items-center" aria-labelledby="hero-heading">
-  <img src="hero.jpg" alt="" aria-hidden="true" class="hero-bg" />
+  <img src="hero.jpg" alt="" aria-hidden="true" class="hero-bg" [appParallax]="0.3" />
   <div class="hero-overlay" aria-hidden="true"></div>
   <div class="container text-center hero-content">
     <p class="text-uppercase small mb-3 hero-eyebrow header-rise">Hello, I'm</p>
@@ -86,12 +86,16 @@
   </section>
 }
 
-<section class="py-5 section-surface" aria-labelledby="home-contact-heading">
-  <div class="container">
-    <header class="text-center mb-4">
-      <h2 id="home-contact-heading" class="h2">Get in touch</h2>
-      <p class="text-muted mb-0">Have a project in mind? I'd love to hear about it.</p>
-    </header>
-    <app-contact-form />
+<section class="home-contact py-5" aria-labelledby="home-contact-heading">
+  <img src="hero.jpg" alt="" aria-hidden="true" class="home-contact__bg" [appParallax]="0.3" />
+  <div class="home-contact__overlay" aria-hidden="true"></div>
+  <div class="container home-contact__content">
+    <div class="home-contact__panel mx-auto">
+      <header class="text-center mb-4">
+        <h2 id="home-contact-heading" class="h2">Get in touch</h2>
+        <p class="text-muted mb-0">Have a project in mind? I'd love to hear about it.</p>
+      </header>
+      <app-contact-form />
+    </div>
   </div>
 </section>

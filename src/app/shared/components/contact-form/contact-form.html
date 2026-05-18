@@ -16,6 +16,7 @@
         class="form-control"
         formControlName="name"
         autocomplete="name"
+        placeholder="Your name"
         [attr.aria-invalid]="
           form.controls.name.invalid && form.controls.name.touched ? 'true' : null
         "
@@ -36,6 +37,7 @@
         class="form-control"
         formControlName="email"
         autocomplete="email"
+        placeholder="you@example.com"
         [attr.aria-invalid]="
           form.controls.email.invalid && form.controls.email.touched ? 'true' : null
         "
@@ -55,6 +57,7 @@
         type="text"
         class="form-control"
         formControlName="project_name"
+        placeholder="Brief project title"
         [attr.aria-invalid]="
           form.controls.project_name.invalid && form.controls.project_name.touched ? 'true' : null
         "
@@ -74,6 +77,7 @@
         rows="5"
         class="form-control"
         formControlName="message"
+        placeholder="Tell me about your project…"
         [attr.aria-invalid]="
           form.controls.message.invalid && form.controls.message.touched ? 'true' : null
         "
@@ -89,7 +93,7 @@
     <button
       type="submit"
       class="btn btn-primary btn-lg"
-      [disabled]="form.invalid || submitting()"
+      [disabled]="submitting()"
       [attr.aria-disabled]="form.invalid || submitting() ? 'true' : null"
     >
       @if (submitting()) {

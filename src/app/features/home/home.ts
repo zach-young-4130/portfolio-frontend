@@ -1,4 +1,12 @@
-import { Component, ChangeDetectionStrategy, DestroyRef, inject, signal, computed, OnInit } from '@angular/core';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  DestroyRef,
+  inject,
+  signal,
+  computed,
+  OnInit,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { NgbAccordionModule } from '@ng-bootstrap/ng-bootstrap';
@@ -10,11 +18,18 @@ import { FaqItem } from '../../core/models/faq-item.model';
 import { CommunityItem } from '../../core/models/community-item.model';
 import { ProjectCardComponent } from '../../shared/components/project-card/project-card';
 import { ContactFormComponent } from '../../shared/components/contact-form/contact-form';
+import { ParallaxDirective } from '../../shared/directives/parallax.directive';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterLink, NgbAccordionModule, ProjectCardComponent, ContactFormComponent],
+  imports: [
+    RouterLink,
+    NgbAccordionModule,
+    ProjectCardComponent,
+    ContactFormComponent,
+    ParallaxDirective,
+  ],
   templateUrl: './home.html',
   styleUrl: './home.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

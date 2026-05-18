@@ -20,6 +20,16 @@ export class ContactFormComponent {
   protected submitting = signal(false);
   protected errorMessage = signal<string | null>(null);
 
+  private hideSentTimeout: ReturnType<typeof setTimeout> | null = null;
+  private hideErrorTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      if (this.hideSentTimeout) clearTimeout(this.hideSentTimeout);
+      if (this.hideErrorTimeout) clearTimeout(this.hideErrorTimeout);
+    });
+  }
+
   protected form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(100)]],
     email: ['', [Validators.required, Validators.email]],
@@ -42,10 +52,14 @@ export class ContactFormComponent {
           this.sent.set(true);
           this.submitting.set(false);
           this.form.reset();
+          if (this.hideSentTimeout) clearTimeout(this.hideSentTimeout);
+          this.hideSentTimeout = setTimeout(() => this.sent.set(false), 30_000);
         },
         error: () => {
           this.errorMessage.set('We could not send your message. Please try again.');
           this.submitting.set(false);
+          if (this.hideErrorTimeout) clearTimeout(this.hideErrorTimeout);
+          this.hideErrorTimeout = setTimeout(() => this.errorMessage.set(null), 30_000);
         },
       });
   }
