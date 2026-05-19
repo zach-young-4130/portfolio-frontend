@@ -7,10 +7,10 @@
 <section class="container py-5">
   <p class="lead mb-5">
     A guided tour of this site's source. The trees below show the shape of the
-    front-end and back-end. The snippets after them are the bits I think are
-    worth pointing at — small ideas, idioms I keep reaching for, or patterns
-    that took a beat to land on. Living document; I'll keep adding when
-    something interesting shows up.
+    front-end and back-end. The snippets after them are grouped by subject —
+    auth, API conventions, services, frontend patterns, and domain models —
+    so you can skip to the area you care about. Living document; I'll keep
+    adding when something interesting shows up.
   </p>
 
   <h2 class="h3 mt-5 mb-3">Front-end (Angular 21 + SSR)</h2>
@@ -24,20 +24,21 @@
 │   ├── app/
 │   │   ├── core/                    # singletons, guards, interceptors, models
 │   │   │   ├── guards/
-│   │   │   │   └── auth.guard.ts
+│   │   │   │   ├── auth.guard.ts            # any signed-in user
+│   │   │   │   └── admin.guard.ts           # admin role only
 │   │   │   ├── interceptors/
 │   │   │   │   └── credentials.interceptor.ts
-│   │   │   ├── models/              # typed interfaces (Project, FaqItem, …)
-│   │   │   └── services/            # api, auth, theme, feature services
+│   │   │   ├── models/                      # Project class, User, FaqItem, …
+│   │   │   └── services/                    # api, auth, theme, feature services
 │   │   ├── shared/
 │   │   │   ├── components/
 │   │   │   │   ├── navbar/
 │   │   │   │   ├── footer/
 │   │   │   │   ├── project-card/
-│   │   │   │   ├── page-hero/       # reused across all sub-pages
-│   │   │   │   └── contact-form/    # used by /contact and home
+│   │   │   │   ├── page-hero/               # reused across all sub-pages
+│   │   │   │   └── contact-form/            # used by /contact and home
 │   │   │   └── directives/
-│   │   │       └── parallax.directive.ts   # SSR-safe scroll parallax
+│   │   │       └── parallax.directive.ts    # SSR-safe scroll parallax
 │   │   ├── features/                # lazy-loaded route bundles
 │   │   │   ├── home/
 │   │   │   ├── projects/
@@ -46,95 +47,109 @@
 │   │   │   ├── faq/
 │   │   │   ├── community/
 │   │   │   ├── contact/
-│   │   │   ├── code/                # this page
+│   │   │   ├── code/                        # this page
 │   │   │   └── admin/
-│   │   │       ├── login/
+│   │   │       ├── login/                   # password + Google Sign-In
 │   │   │       ├── dashboard/
 │   │   │       ├── projects/
 │   │   │       ├── faq/
 │   │   │       ├── community/
 │   │   │       └── messages/
-│   │   ├── app.config.ts            # standalone providers, http, hydration
-│   │   ├── app.routes.ts            # lazy routes + authGuard on /admin
-│   │   └── app.ts                   # root component
-│   ├── styles.scss                  # bootstrap import + theme tokens
-│   └── main.ts / main.server.ts     # browser + SSR bootstrap
-└── public/                          # static hero images (served at /)
+│   │   ├── app.config.ts                    # standalone providers, http, hydration
+│   │   ├── app.routes.ts                    # lazy routes + adminGuard on /admin
+│   │   └── app.ts                           # root component
+│   ├── styles.scss                          # bootstrap import + theme tokens
+│   └── main.ts / main.server.ts             # browser + SSR bootstrap
+└── public/                                  # static hero images (served at /)
 </code></pre>
 
   <h2 class="h3 mt-5 mb-3">Back-end (Rails 8 API-only)</h2>
   <p class="text-secondary">
     Versioned namespace, every endpoint documented by an rswag request spec
-    that emits <code>swagger/v1/swagger.yaml</code> as a side effect. Auth is a
-    single admin user with a stateless JWT — login returns a Bearer token,
-    the SPA sends it in the <code>Authorization</code> header on every write.
-    No cookies, no CSRF middleware: the header is not auto-attached
-    cross-origin, so CSRF is structurally out of reach.
+    that emits <code>swagger/v1/swagger.yaml</code> as a side effect. Auth is
+    a stateless JWT — login (password or Google) returns a Bearer token, the
+    SPA sends it in the <code>Authorization</code> header on every write. No
+    cookies, no CSRF middleware: the header is not auto-attached cross-origin,
+    so CSRF is structurally out of reach.
   </p>
 <pre class="code-tree"><code>portfolio-api/
 ├── app/
 │   ├── controllers/
 │   │   ├── concerns/
-│   │   │   └── authentication.rb        # current_user, authenticate!, issue_token
-│   │   └── api/
-│   │       └── v1/
-│   │           ├── base_controller.rb   # before_action :authenticate!
-│   │           │                        # + visible_scope_for(model)
-│   │           ├── sessions_controller.rb
-│   │           ├── projects_controller.rb
-│   │           ├── faq_items_controller.rb
-│   │           ├── community_items_controller.rb
-│   │           └── contact_messages_controller.rb
+│   │   │   └── authentication.rb            # current_user, authenticate!, issue_token
+│   │   └── api/v1/
+│   │       ├── base_controller.rb           # render_success / render_error / authorize_admin!
+│   │       ├── sessions_controller.rb       # password + Google login
+│   │       ├── projects_controller.rb
+│   │       ├── faq_items_controller.rb
+│   │       ├── community_items_controller.rb
+│   │       └── contact_messages_controller.rb
+│   ├── blueprints/                          # Blueprinter serializers — every endpoint uses one
+│   │   ├── user_blueprint.rb
+│   │   ├── project_blueprint.rb
+│   │   ├── faq_item_blueprint.rb
+│   │   ├── community_item_blueprint.rb
+│   │   └── contact_message_blueprint.rb
 │   ├── services/
-│   │   └── json_web_token.rb            # HS256 encode/decode, secret_key_base
+│   │   ├── service_result.rb                # {{ '{' }} ok:, data: {{ '}' }}/{{ '{' }} ok:, error: {{ '}' }} envelope
+│   │   ├── json_web_token.rb                # HS256 encode/decode
+│   │   └── google_id_token_verifier.rb      # validates GIS tokens against Google's pubkeys
 │   └── models/
-│       ├── user.rb                      # has_secure_password
-│       ├── project.rb                   # featured / published scopes
+│       ├── user.rb                          # role, lockout columns, has_secure_password
+│       ├── project.rb                       # featured / published scopes
 │       ├── faq_item.rb
 │       ├── community_item.rb
-│       └── contact_message.rb           # email format + normalize
+│       └── contact_message.rb               # email format + normalize
 ├── config/
-│   ├── routes.rb                        # /api/v1 namespace
-│   ├── application.rb                   # api_only, no session middleware
+│   ├── routes.rb                            # /api/v1 namespace
+│   ├── application.rb                       # api_only, no session middleware
 │   └── initializers/
-│       └── cors.rb                      # localhost:4200 allowlist
+│       ├── cors.rb                          # localhost + production allowlist
+│       └── rack_attack.rb                   # login rate limiting
 ├── db/
-│   ├── migrate/                         # null:false + indexes on the columns
-│   ├── schema.rb                        #   that get filtered/looked-up
-│   └── seeds.rb                         # idempotent admin + sample content
+│   ├── migrate/                             # null:false + indexes on filtered columns
+│   ├── schema.rb
+│   └── seeds.rb                             # idempotent admin + sample content
 ├── spec/
 │   ├── factories/
 │   ├── models/
-│   ├── requests/api/v1/                 # rswag DSL — also generates the swagger
+│   ├── requests/api/v1/                     # rswag DSL — also generates the swagger
 │   └── support/
-│       └── auth_helpers.rb              # login_as helper for request specs
-└── swagger/v1/swagger.yaml              # ← generated, don't hand-edit
+│       └── auth_helpers.rb
+└── swagger/v1/swagger.yaml                  # ← generated, don't hand-edit
 </code></pre>
 
   <hr class="my-5" />
 
-  <h2 class="h3 mb-4">Snippets I want to point at</h2>
+  <!-- ============================================================ -->
+  <!-- Section: Authentication & Authorization                       -->
+  <!-- ============================================================ -->
+  <h2 class="h3 mb-2">Authentication &amp; Authorization</h2>
+  <p class="text-secondary mb-4">
+    Stateless JWTs, no cookies, two login surfaces (password + Google), and a
+    role split so non-admin users can sign up without unlocking the CMS.
+  </p>
 
-  <article class="snippet">
-    <h3 class="h5">1. Auth-aware scope on the API base controller</h3>
+  <app-code-snippet label="visible_scope_for helper">
+    <h3 class="h5">Auth-aware scope on the API base controller</h3>
     <p class="text-secondary">
       Public callers see only published records. The same URL returns drafts to
-      an authenticated admin. One method on <code>BaseController</code>, three
-      controllers reuse it.
+      an authenticated admin. One method on <code>BaseController</code>, every
+      content controller reuses it.
     </p>
 <pre class="code-snippet"><code># app/controllers/api/v1/base_controller.rb
 def visible_scope_for(model_class)
-  current_user ? model_class.order(:position) : model_class.published
+  current_user&amp;.admin? ? model_class.order(:position) : model_class.published
 end
 
 # usage
 def index
-  render json: {{ '{' }} projects: visible_scope_for(Project).map {{ '{' }} |p| serialize(p) {{ '}' }} {{ '}' }}
+  render_success(projects: ProjectBlueprint.render_as_hash(visible_scope_for(Project)))
 end</code></pre>
-  </article>
+  </app-code-snippet>
 
-  <article class="snippet">
-    <h3 class="h5">2. The JWT auth interceptor</h3>
+  <app-code-snippet label="JWT auth interceptor">
+    <h3 class="h5">The JWT auth interceptor</h3>
     <p class="text-secondary">
       One interceptor wires <code>Authorization: Bearer ...</code> onto every
       outbound request when a token is present in <code>TokenService</code>.
@@ -148,50 +163,229 @@ export const authInterceptor: HttpInterceptorFn = (req, next) =&gt; {{ '{' }}
     ? next(req.clone({{ '{' }} setHeaders: {{ '{' }} Authorization: `Bearer ${{ '$' }}{{ '{' }}token{{ '}' }}` {{ '}' }} {{ '}' }}))
     : next(req);
 {{ '}' }};</code></pre>
-  </article>
+  </app-code-snippet>
 
-  <article class="snippet">
-    <h3 class="h5">3. ThemeService — one effect syncs three things</h3>
+  <app-code-snippet label="stateless JWT service">
+    <h3 class="h5">Stateless JWT — one service, two methods</h3>
     <p class="text-secondary">
-      <code>signal()</code> for state, <code>effect()</code> for side-effects.
-      Every theme change updates my own custom-property class, Bootstrap's
-      <code>data-bs-theme</code> attribute, and <code>localStorage</code> in
-      one pass. SSR-safe via <code>isPlatformBrowser</code>.
+      Login signs a JWT with <code>secret_key_base</code>; every subsequent
+      request decodes the <code>Authorization: Bearer</code> header in the
+      <code>Authentication</code> concern. No sessions, no cookies, no
+      <code>SameSite</code>/<code>Secure</code> dance to keep dev and prod in
+      sync.
     </p>
-<pre class="code-snippet"><code>constructor() {{ '{' }}
-  effect(() =&gt; {{ '{' }}
-    const t = this._theme();
-    const root = this.doc.documentElement;
-    root.classList.remove('theme-light', 'theme-dark');
-    root.classList.add(`theme-${{ '$' }}{{ '{' }}t{{ '}' }}`);
-    root.setAttribute('data-bs-theme', t);
-    if (isPlatformBrowser(this.platformId)) {{ '{' }}
-      localStorage.setItem('theme', t);
-    {{ '}' }}
-  {{ '}' }});
-{{ '}' }}</code></pre>
-  </article>
+<pre class="code-snippet"><code># app/services/json_web_token.rb
+class JsonWebToken
+  ALGORITHM = "HS256"
+  DEFAULT_EXP = 7.days
 
-  <article class="snippet">
-    <h3 class="h5">4. authGuard — return a UrlTree, not a navigate()</h3>
+  def self.encode(payload, exp: DEFAULT_EXP.from_now)
+    JWT.encode(payload.merge(exp: exp.to_i), secret, ALGORITHM)
+  end
+
+  def self.decode(token)
+    JWT.decode(token, secret, true, algorithm: ALGORITHM).first
+  rescue JWT::DecodeError, JWT::ExpiredSignature
+    nil
+  end
+
+  def self.secret = Rails.application.secret_key_base
+end</code></pre>
+  </app-code-snippet>
+
+  <app-code-snippet label="authGuard and adminGuard">
+    <h3 class="h5">authGuard &amp; adminGuard — return a UrlTree, not a navigate()</h3>
     <p class="text-secondary">
       Functional guards. Returning a <code>UrlTree</code> lets Angular handle
-      the redirect itself, which means no race conditions with the route's own
-      navigation and no imperative <code>router.navigate()</code> hiding inside
-      a guard.
+      the redirect itself — no race conditions with the route's own navigation
+      and no imperative <code>router.navigate()</code> hiding inside a guard.
+      Two guards: <code>authGuard</code> protects anything that requires a
+      logged-in user; <code>adminGuard</code> is stricter and bounces
+      non-admin visitors to the home page instead of leaving them in a
+      permission limbo.
     </p>
 <pre class="code-snippet"><code>// core/guards/auth.guard.ts
 export const authGuard: CanActivateFn = () =&gt; {{ '{' }}
   const auth = inject(AuthService);
   const router = inject(Router);
-  return auth.isAuthenticated()
-    ? true
-    : router.createUrlTree(['/admin/login']);
-{{ '}' }};</code></pre>
-  </article>
+  return auth.isAuthenticated() ? true : router.createUrlTree(['/admin/login']);
+{{ '}' }};
 
-  <article class="snippet">
-    <h3 class="h5">5. rswag — the request spec IS the API doc</h3>
+// core/guards/admin.guard.ts
+export const adminGuard: CanActivateFn = () =&gt; {{ '{' }}
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  if (!auth.isAuthenticated()) return router.createUrlTree(['/admin/login']);
+  if (!auth.isAdmin())         return router.createUrlTree(['/']);
+  return true;
+{{ '}' }};</code></pre>
+  </app-code-snippet>
+
+  <app-code-snippet label="login hardening">
+    <h3 class="h5">Login hardening — three layers, no security through obscurity</h3>
+    <p class="text-secondary">
+      The admin route is public; the defenses are not. <strong>Rate limiting</strong>
+      via <code>rack-attack</code> caps brute-force attempts at 5 per IP per 5
+      minutes. <strong>Per-account lockout</strong> survives IP rotation:
+      <code>failed_attempts</code> and <code>locked_until</code> on the user
+      track the counter, and 15 minutes of lockout kicks in after 5 misses.
+      <strong>Timing-safe auth</strong> via Rails 7.1+
+      <code>User.authenticate_by</code> runs bcrypt whether or not the email
+      exists, so response time can't enumerate accounts. The locked response
+      includes <code>locked_until</code> so the frontend can show a real
+      countdown.
+    </p>
+<pre class="code-snippet"><code># config/initializers/rack_attack.rb
+class Rack::Attack
+  throttle("login/ip", limit: 5, period: 5.minutes) do |req|
+    req.ip if req.post? &amp;&amp; req.path == "/api/v1/session"
+  end
+end
+
+# app/models/user.rb
+MAX_FAILED_ATTEMPTS = 5
+LOCKOUT_DURATION    = 15.minutes
+
+def locked? = locked_until.present? &amp;&amp; locked_until &gt; Time.current
+
+def register_failed_attempt!
+  new_count = failed_attempts + 1
+  if new_count &gt;= MAX_FAILED_ATTEMPTS
+    update_columns(failed_attempts: new_count, locked_until: LOCKOUT_DURATION.from_now)
+  else
+    update_columns(failed_attempts: new_count)
+  end
+end
+
+# app/controllers/api/v1/sessions_controller.rb
+def create
+  existing = User.find_by(email: params[:email])
+  if existing&amp;.locked?
+    return render_error(
+      "Account temporarily locked.",
+      status: :unauthorized,
+      extra: {{ '{' }} locked_until: existing.locked_until.iso8601 {{ '}' }}
+    )
+  end
+
+  # bcrypt runs whether or not the user exists → no timing enumeration
+  user = User.authenticate_by(email: params[:email], password: params[:password])
+  if user
+    user.reset_failed_attempts!
+    render_success(user: UserBlueprint.render_as_hash(user), token: issue_token(user))
+  else
+    existing&amp;.register_failed_attempt!
+    render_error("Invalid credentials", status: :unauthorized)
+  end
+end</code></pre>
+  </app-code-snippet>
+
+  <app-code-snippet label="Sign in with Google">
+    <h3 class="h5">Sign in with Google — verify server-side, never trust the client</h3>
+    <p class="text-secondary">
+      Frontend uses Google Identity Services to obtain a signed ID token
+      client-side. The backend re-verifies it against Google's public keys
+      (the token is JWS-signed; the SDK return value alone proves nothing
+      without re-verification). On verify, the controller finds the user by
+      <code>google_uid</code>, links Google to an existing email-only admin
+      if there's a match, or creates a brand-new public user with
+      <code>role: "user"</code>. Admin promotion is never automatic.
+    </p>
+<pre class="code-snippet"><code># app/services/google_id_token_verifier.rb
+class GoogleIdTokenVerifier
+  include ServiceResult
+
+  def call(id_token)
+    return error("Missing id_token") if id_token.blank?
+    client_id = Rails.application.credentials.dig(:google, :client_id)
+    payload = GoogleIDToken::Validator.new.check(id_token, client_id)
+    success(payload)
+  rescue GoogleIDToken::ValidationError =&gt; e
+    error("Invalid Google token: #{{ '{' }}e.message{{ '}' }}")
+  end
+end
+
+# app/controllers/api/v1/sessions_controller.rb
+def create_google
+  result = GoogleIdTokenVerifier.new.call(params[:id_token])
+  return render_error("Invalid Google token", status: :unauthorized) unless result[:ok]
+
+  payload = result[:data]
+  return render_error("Google email is not verified", status: :unauthorized) \
+    unless payload["email_verified"]
+
+  user = find_or_create_google_user(payload)
+  user.reset_failed_attempts!
+  render_success(user: UserBlueprint.render_as_hash(user), token: issue_token(user))
+end
+
+// features/admin/login/login.ts — dynamic GIS load, button render, role-based redirect
+private async initGoogleSignIn() {{ '{' }}
+  if (!environment.googleClientId) return;
+  await this.loadGsiScript();
+  google.accounts.id.initialize({{ '{' }}
+    client_id: environment.googleClientId,
+    callback: (response) =&gt; this.handleGoogleCredential(response.credential),
+  {{ '}' }});
+  google.accounts.id.renderButton(this.googleButton()!.nativeElement, {{ '{' }}
+    theme: 'outline', size: 'large', text: 'continue_with',
+  {{ '}' }});
+{{ '}' }}
+
+private redirectAfterLogin() {{ '{' }}
+  this.router.navigate([this.auth.isAdmin() ? '/admin' : '/']);
+{{ '}' }}</code></pre>
+  </app-code-snippet>
+
+  <!-- ============================================================ -->
+  <!-- Section: API Patterns                                         -->
+  <!-- ============================================================ -->
+  <h2 class="h3 mt-5 mb-2">API Patterns</h2>
+  <p class="text-secondary mb-4">
+    Two response helpers, every endpoint, one error shape. Tests double as
+    OpenAPI docs. Allowlists are tight and explicit.
+  </p>
+
+  <app-code-snippet label="render_success and render_error">
+    <h3 class="h5">Two helpers, every endpoint — <code>render_success</code> + <code>render_error</code></h3>
+    <p class="text-secondary">
+      Every controller funnels through exactly two helpers on
+      <code>BaseController</code>. Payloads handed to <code>render_success</code>
+      are always Blueprinter hashes — the helper owns the envelope (status +
+      json wrapper), never serialization. <code>render_error</code> accepts an
+      AR record, a string, or an array, and always emits
+      <code>{{ '{' }} errors: [...] {{ '}' }}</code> so the frontend can
+      type-narrow on a single shape. Pass <code>extra:</code> for structured
+      side-info like <code>locked_until</code>.
+    </p>
+<pre class="code-snippet"><code># app/controllers/api/v1/base_controller.rb
+def render_success(status: :ok, **payload)
+  render json: payload, status: status
+end
+
+def render_error(error, status: :unprocessable_entity, extra: {{ '{' }}{{ '}' }})
+  errors =
+    case error
+    when ActiveRecord::Base then error.errors.as_json(full_messages: true)
+    when Array then error.map(&amp;:to_s)
+    else [ error.to_s ]
+    end
+  render json: {{ '{' }} errors: errors, **extra {{ '}' }}, status: status
+end
+
+# app/controllers/api/v1/projects_controller.rb
+def create
+  project = Project.new(project_params)
+  if project.save
+    render_success(project: ProjectBlueprint.render_as_hash(project), status: :created)
+  else
+    render_error(project)            # 422 with AR errors
+  end
+end</code></pre>
+  </app-code-snippet>
+
+  <app-code-snippet label="rswag request spec">
+    <h3 class="h5">rswag — the request spec IS the API doc</h3>
     <p class="text-secondary">
       Every endpoint has a request spec in the rswag DSL. The same file runs
       assertions <em>and</em> emits <code>swagger/v1/swagger.yaml</code>.
@@ -221,38 +415,10 @@ path "/api/v1/projects" do
     end
   end
 end</code></pre>
-  </article>
+  </app-code-snippet>
 
-  <article class="snippet">
-    <h3 class="h5">6. Stateless JWT auth — one service, two methods</h3>
-    <p class="text-secondary">
-      Login signs a JWT with <code>secret_key_base</code>; every subsequent
-      request decodes the <code>Authorization: Bearer</code> header in the
-      <code>Authentication</code> concern. No sessions, no cookies, no
-      <code>SameSite</code>/<code>Secure</code> dance to keep dev and prod in
-      sync.
-    </p>
-<pre class="code-snippet"><code># app/services/json_web_token.rb
-class JsonWebToken
-  ALGORITHM = "HS256"
-  DEFAULT_EXP = 7.days
-
-  def self.encode(payload, exp: DEFAULT_EXP.from_now)
-    JWT.encode(payload.merge(exp: exp.to_i), secret, ALGORITHM)
-  end
-
-  def self.decode(token)
-    JWT.decode(token, secret, true, algorithm: ALGORITHM).first
-  rescue JWT::DecodeError, JWT::ExpiredSignature
-    nil
-  end
-
-  def self.secret = Rails.application.secret_key_base
-end</code></pre>
-  </article>
-
-  <article class="snippet">
-    <h3 class="h5">7. CORS — narrow allowlist, no credentials needed</h3>
+  <app-code-snippet label="CORS configuration">
+    <h3 class="h5">CORS — narrow allowlist, no credentials needed</h3>
     <p class="text-secondary">
       No CSRF middleware. With JWT in the <code>Authorization</code> header
       (not a cookie), browsers don't auto-attach it cross-origin — CSRF is
@@ -262,7 +428,8 @@ end</code></pre>
 <pre class="code-snippet"><code># config/initializers/cors.rb
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
-    origins "http://localhost:4200", "http://127.0.0.1:4200"
+    origins "http://localhost:4200", "http://127.0.0.1:4200",
+            "https://zachyoung.com", "https://www.zachyoung.com"
 
     resource "*",
       headers: :any,
@@ -270,10 +437,117 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
       methods: %i[get post put patch delete options head]
   end
 end</code></pre>
-  </article>
+  </app-code-snippet>
 
-  <article class="snippet">
-    <h3 class="h5">8. PageHero — signal inputs with a default</h3>
+  <!-- ============================================================ -->
+  <!-- Section: Service Architecture                                 -->
+  <!-- ============================================================ -->
+  <h2 class="h3 mt-5 mb-2">Service Architecture</h2>
+  <p class="text-secondary mb-4">
+    Service objects return a normalized envelope, so callers pattern-match
+    on <code>:ok</code> instead of branching on exceptions, nils, and
+    sentinels.
+  </p>
+
+  <app-code-snippet label="ServiceResult envelope">
+    <h3 class="h5"><code>ServiceResult</code> — one envelope every service returns</h3>
+    <p class="text-secondary">
+      Each service exposes a single <code>#call</code>. The result is always
+      either <code>{{ '{' }} ok: true, data: ... {{ '}' }}</code> or
+      <code>{{ '{' }} ok: false, error: ... {{ '}' }}</code>. The module is
+      callable as <code>ServiceResult.success(...)</code> directly or as bare
+      <code>success(...)</code> / <code>error(...)</code> once
+      <code>include</code>d.
+    </p>
+<pre class="code-snippet"><code># app/services/service_result.rb
+module ServiceResult
+  module_function
+
+  def success(data = nil) = {{ '{' }} ok: true,  data: data {{ '}' }}
+  def error(error)        = {{ '{' }} ok: false, error: error {{ '}' }}
+end
+
+# Example service
+class PublishPostService
+  include ServiceResult
+
+  def call(post)
+    return error("Post not found") if post.nil?
+    post.update!(published: true)
+    success(post: post)
+  rescue ActiveRecord::RecordInvalid =&gt; e
+    error(e.record)                 # render_error speaks AR records natively
+  end
+end
+
+# Controller — pattern-match on :ok, hand the payload to render_*
+result = PublishPostService.new.call(post)
+result[:ok] \
+  ? render_success(post: PostBlueprint.render_as_hash(result[:data][:post]))
+  : render_error(result[:error])</code></pre>
+  </app-code-snippet>
+
+  <!-- ============================================================ -->
+  <!-- Section: Frontend Patterns                                    -->
+  <!-- ============================================================ -->
+  <h2 class="h3 mt-5 mb-2">Frontend Patterns</h2>
+  <p class="text-secondary mb-4">
+    Signals for state, <code>afterNextRender</code> for browser-only setup,
+    CSS custom properties for theming so we don't need a single style recalc
+    in JS to swap modes.
+  </p>
+
+  <app-code-snippet label="ThemeService effect">
+    <h3 class="h5">ThemeService — one effect syncs three things</h3>
+    <p class="text-secondary">
+      <code>signal()</code> for state, <code>effect()</code> for side-effects.
+      Every theme change updates my own custom-property class, Bootstrap's
+      <code>data-bs-theme</code> attribute, and <code>localStorage</code> in
+      one pass. SSR-safe via <code>isPlatformBrowser</code>.
+    </p>
+<pre class="code-snippet"><code>constructor() {{ '{' }}
+  effect(() =&gt; {{ '{' }}
+    const t = this._theme();
+    const root = this.doc.documentElement;
+    root.classList.remove('theme-light', 'theme-dark');
+    root.classList.add(`theme-${{ '$' }}{{ '{' }}t{{ '}' }}`);
+    root.setAttribute('data-bs-theme', t);
+    if (isPlatformBrowser(this.platformId)) {{ '{' }}
+      localStorage.setItem('theme', t);
+    {{ '}' }}
+  {{ '}' }});
+{{ '}' }}</code></pre>
+  </app-code-snippet>
+
+  <app-code-snippet label="theme tokens">
+    <h3 class="h5">Theme tokens — CSS custom properties, not Sass variables</h3>
+    <p class="text-secondary">
+      Sass variables resolve at build time and don't react to a class change.
+      CSS custom properties resolve at runtime. Switching one class on
+      <code>&lt;html&gt;</code> recolors every component without a single
+      runtime style recalc in JS.
+    </p>
+<pre class="code-snippet"><code>// styles.scss
+:root, .theme-light {{ '{' }}
+  --bg:          #ffffff;
+  --bg-surface:  #e9ecef;
+  --fg:          #111111;
+  --accent:      #4b9cd3;
+{{ '}' }}
+
+.theme-dark {{ '{' }}
+  --bg:          #18181b;
+  --bg-surface:  #27272a;
+  --fg:          #fafafa;
+  --accent:      #4b9cd3;
+{{ '}' }}
+
+// any component
+.card {{ '{' }} background: var(--bg-surface); color: var(--fg); {{ '}' }}</code></pre>
+  </app-code-snippet>
+
+  <app-code-snippet label="PageHero signal inputs">
+    <h3 class="h5">PageHero — signal inputs with a default</h3>
     <p class="text-secondary">
       Modern Angular signal-based inputs.
       <code>input.required&lt;string&gt;()</code> for the unavoidable ones,
@@ -293,61 +567,16 @@ export class PageHeroComponent {{ '{' }}
   title="Projects"
   subtitle="Things I've built."
   image="projects-hero.jpg" /&gt;</code></pre>
-  </article>
+  </app-code-snippet>
 
-  <article class="snippet">
-    <h3 class="h5">9. ActiveRecord <code>normalizes:</code> (Rails 7.1+)</h3>
-    <p class="text-secondary">
-      Built-in attribute normalization. No <code>before_validation</code>
-      callback, no custom setter, no "is the email lower-cased on this read or
-      that one" inconsistency.
-    </p>
-<pre class="code-snippet"><code># app/models/contact_message.rb
-class ContactMessage &lt; ApplicationRecord
-  normalizes :name, :message, with: -&gt;(v) {{ '{' }} v.strip {{ '}' }}
-  normalizes :email,           with: -&gt;(v) {{ '{' }} v.strip.downcase {{ '}' }}
-
-  validates :name, :message, presence: true
-  validates :email, presence: true,
-                    format: {{ '{' }} with: URI::MailTo::EMAIL_REGEXP {{ '}' }}
-end</code></pre>
-  </article>
-
-  <article class="snippet">
-    <h3 class="h5">10. Theme tokens — CSS custom properties, not Sass variables</h3>
-    <p class="text-secondary">
-      Sass variables resolve at build time and don't react to a class change.
-      CSS custom properties resolve at runtime. Switching one class on
-      <code>&lt;html&gt;</code> recolors every component without a single
-      runtime style recalc in JS.
-    </p>
-<pre class="code-snippet"><code>// styles.scss
-:root, .theme-light {{ '{' }}
-  --bg:          #ffffff;
-  --bg-surface:  #f8f9fa;
-  --fg:          #111111;
-  --accent:      #4b9cd3;
-{{ '}' }}
-
-.theme-dark {{ '{' }}
-  --bg:          #18181b;
-  --bg-surface:  #27272a;
-  --fg:          #fafafa;
-  --accent:      #4b9cd3;
-{{ '}' }}
-
-// any component
-.card {{ '{' }} background: var(--bg-surface); color: var(--fg); {{ '}' }}</code></pre>
-  </article>
-
-  <article class="snippet">
-    <h3 class="h5">11. ParallaxDirective — afterNextRender, signal inputs, reduced-motion</h3>
+  <app-code-snippet label="ParallaxDirective">
+    <h3 class="h5">ParallaxDirective — afterNextRender, signal inputs, reduced-motion</h3>
     <p class="text-secondary">
       Browser-only setup without an <code>isPlatformBrowser</code> guard:
       <code>afterNextRender</code> only runs in the browser, so the scroll
-      listener never registers during SSR. Signal <code>input()</code> with an
-      alias keeps the public attribute terse, rAF throttling caps work at one
-      update per frame, and the whole effect opts out under
+      listener never registers during SSR. Signal <code>input()</code> with
+      an alias keeps the public attribute terse, rAF throttling caps work at
+      one update per frame, and the whole effect opts out under
       <code>prefers-reduced-motion: reduce</code>.
     </p>
 <pre class="code-snippet"><code>// shared/directives/parallax.directive.ts
@@ -369,10 +598,38 @@ export class ParallaxDirective {{ '{' }}
     {{ '}' }});
   {{ '}' }}
 {{ '}' }}</code></pre>
-  </article>
+  </app-code-snippet>
 
-  <article class="snippet">
-    <h3 class="h5">12. Project — from interface to class with a <code>time_ago</code> field</h3>
+  <!-- ============================================================ -->
+  <!-- Section: Domain Models                                        -->
+  <!-- ============================================================ -->
+  <h2 class="h3 mt-5 mb-2">Domain Models</h2>
+  <p class="text-secondary mb-4">
+    AR models lean on Rails built-ins (<code>normalizes</code>, validations)
+    instead of bespoke callbacks. Frontend models graduate from interfaces
+    to real classes when they need to carry behavior.
+  </p>
+
+  <app-code-snippet label="ActiveRecord normalizes">
+    <h3 class="h5">ActiveRecord <code>normalizes:</code> (Rails 7.1+)</h3>
+    <p class="text-secondary">
+      Built-in attribute normalization. No <code>before_validation</code>
+      callback, no custom setter, no "is the email lower-cased on this read or
+      that one" inconsistency.
+    </p>
+<pre class="code-snippet"><code># app/models/contact_message.rb
+class ContactMessage &lt; ApplicationRecord
+  normalizes :name, :message, with: -&gt;(v) {{ '{' }} v.strip {{ '}' }}
+  normalizes :email,           with: -&gt;(v) {{ '{' }} v.strip.downcase {{ '}' }}
+
+  validates :name, :message, presence: true
+  validates :email, presence: true,
+                    format: {{ '{' }} with: URI::MailTo::EMAIL_REGEXP {{ '}' }}
+end</code></pre>
+  </app-code-snippet>
+
+  <app-code-snippet label="Project model class">
+    <h3 class="h5">Project — from interface to class with a <code>time_ago</code> field</h3>
     <p class="text-secondary">
       The frontend's <code>Project</code> graduated from a structural
       <code>interface</code> to a real class so it can carry behavior.
@@ -420,15 +677,8 @@ export class Project {{ '{' }}
     if (days &lt; 7) return days + ' day' + (days === 1 ? '' : 's') + ' ago';
     // …walks days → weeks → months → years and picks the right unit
   {{ '}' }}
-{{ '}' }}
-
-// core/services/projects.service.ts
-list() {{ '{' }}
-  return this.api.get&lt;{{ '{' }} projects: ProjectData[] {{ '}' }}&gt;('projects').pipe(
-    map((res) =&gt; ({{ '{' }} projects: res.projects.map((p) =&gt; new Project(p)) {{ '}' }})),
-  );
 {{ '}' }}</code></pre>
-  </article>
+  </app-code-snippet>
 
   <p class="text-secondary mt-5 mb-0">
     More to come. If you spot something in the source you'd like a closer look

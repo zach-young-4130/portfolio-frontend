@@ -11,6 +11,7 @@ export class AuthService {
 
   readonly currentUser = signal<User | null>(null);
   readonly isAuthenticated = computed(() => this.currentUser() !== null);
+  readonly isAdmin = computed(() => this.currentUser()?.role === 'admin');
 
   login(email: string, password: string) {
     return this.api.post<{ user: User; token: string }>('session', { email, password }).pipe(
@@ -19,6 +20,17 @@ export class AuthService {
         this.currentUser.set(res.user);
       }),
     );
+  }
+
+  loginWithGoogle(idToken: string) {
+    return this.api
+      .post<{ user: User; token: string }>('session/google', { id_token: idToken })
+      .pipe(
+        tap((res) => {
+          this.tokens.set(res.token);
+          this.currentUser.set(res.user);
+        }),
+      );
   }
 
   logout() {
