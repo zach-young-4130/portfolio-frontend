@@ -29,7 +29,9 @@
       <div class="d-flex gap-3 mt-4">
         @if (p.live_url) {
           <a [href]="p.live_url" target="_blank" rel="noopener" class="btn btn-primary"
-             [attr.aria-label]="'Open live demo for ' + p.title">View Live</a>
+             [attr.aria-label]="'Open live site for ' + p.title">
+            View Live &rarr;
+          </a>
         }
         @if (p.repo_url) {
           <a [href]="p.repo_url" target="_blank" rel="noopener" class="btn btn-outline-secondary"

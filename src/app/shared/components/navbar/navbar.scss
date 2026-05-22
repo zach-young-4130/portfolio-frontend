@@ -28,3 +28,14 @@ nav {
     color: var(--accent);
   }
 }
+
+.btn-outline-secondary {
+  --bs-btn-color: var(--fg);
+  --bs-btn-border-color: var(--border);
+  --bs-btn-hover-bg: var(--fg);
+  --bs-btn-hover-color: var(--bg);
+  --bs-btn-hover-border-color: var(--fg);
+  --bs-btn-active-bg: var(--fg);
+  --bs-btn-active-color: var(--bg);
+  --bs-btn-active-border-color: var(--fg);
+}

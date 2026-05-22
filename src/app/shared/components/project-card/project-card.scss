@@ -1,5 +1,6 @@
 :host {
   display: block;
+  height: 100%;
 }
 
 .project-card {
@@ -31,12 +32,6 @@
 .tech-stack {
   position: relative;
   z-index: 2;
-}
-
-.tech-badge {
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-  color: var(--accent-dark);
-  font-weight: 500;
 }
 
 .project-card-actions {

@@ -23,6 +23,15 @@
               }
             </p>
             <p class="mb-3">{{ item.description }}</p>
+            @if (techList(item.tech_stack).length > 0) {
+              <ul class="list-inline mb-3 community-tech" aria-label="Technologies taught">
+                @for (tech of techList(item.tech_stack); track tech) {
+                  <li class="list-inline-item">
+                    <span class="badge tech-badge">{{ tech }}</span>
+                  </li>
+                }
+              </ul>
+            }
             @if (item.url) {
               <a
                 [href]="item.url"

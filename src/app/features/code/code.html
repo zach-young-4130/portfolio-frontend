@@ -280,63 +280,6 @@ def create
 end</code></pre>
   </app-code-snippet>
 
-  <app-code-snippet label="Sign in with Google">
-    <h3 class="h5">Sign in with Google — verify server-side, never trust the client</h3>
-    <p class="text-secondary">
-      Frontend uses Google Identity Services to obtain a signed ID token
-      client-side. The backend re-verifies it against Google's public keys
-      (the token is JWS-signed; the SDK return value alone proves nothing
-      without re-verification). On verify, the controller finds the user by
-      <code>google_uid</code>, links Google to an existing email-only admin
-      if there's a match, or creates a brand-new public user with
-      <code>role: "user"</code>. Admin promotion is never automatic.
-    </p>
-<pre class="code-snippet"><code># app/services/google_id_token_verifier.rb
-class GoogleIdTokenVerifier
-  include ServiceResult
-
-  def call(id_token)
-    return error("Missing id_token") if id_token.blank?
-    client_id = Rails.application.credentials.dig(:google, :client_id)
-    payload = GoogleIDToken::Validator.new.check(id_token, client_id)
-    success(payload)
-  rescue GoogleIDToken::ValidationError =&gt; e
-    error("Invalid Google token: #{{ '{' }}e.message{{ '}' }}")
-  end
-end
-
-# app/controllers/api/v1/sessions_controller.rb
-def create_google
-  result = GoogleIdTokenVerifier.new.call(params[:id_token])
-  return render_error("Invalid Google token", status: :unauthorized) unless result[:ok]
-
-  payload = result[:data]
-  return render_error("Google email is not verified", status: :unauthorized) \
-    unless payload["email_verified"]
-
-  user = find_or_create_google_user(payload)
-  user.reset_failed_attempts!
-  render_success(user: UserBlueprint.render_as_hash(user), token: issue_token(user))
-end
-
-// features/admin/login/login.ts — dynamic GIS load, button render, role-based redirect
-private async initGoogleSignIn() {{ '{' }}
-  if (!environment.googleClientId) return;
-  await this.loadGsiScript();
-  google.accounts.id.initialize({{ '{' }}
-    client_id: environment.googleClientId,
-    callback: (response) =&gt; this.handleGoogleCredential(response.credential),
-  {{ '}' }});
-  google.accounts.id.renderButton(this.googleButton()!.nativeElement, {{ '{' }}
-    theme: 'outline', size: 'large', text: 'continue_with',
-  {{ '}' }});
-{{ '}' }}
-
-private redirectAfterLogin() {{ '{' }}
-  this.router.navigate([this.auth.isAdmin() ? '/admin' : '/']);
-{{ '}' }}</code></pre>
-  </app-code-snippet>
-
   <!-- ============================================================ -->
   <!-- Section: API Patterns                                         -->
   <!-- ============================================================ -->

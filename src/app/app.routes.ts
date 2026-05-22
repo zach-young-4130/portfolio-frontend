@@ -5,7 +5,7 @@ export const routes: Routes = [
   {
     path: '',
     loadComponent: () => import('./features/home/home').then((m) => m.HomeComponent),
-    title: 'Zach Young — Full-Stack Developer',
+    title: 'Zach Young — Full-Stack Engineer',
   },
   {
     path: 'projects',
@@ -25,6 +25,11 @@ export const routes: Routes = [
     path: 'community',
     loadComponent: () => import('./features/community/community').then((m) => m.CommunityComponent),
     title: 'Community',
+  },
+  {
+    path: 'experience',
+    loadComponent: () => import('./features/experience/experience').then((m) => m.ExperienceComponent),
+    title: 'Experience',
   },
   {
     path: 'contact',

@@ -1,7 +1,8 @@
 // 1. Bootstrap variables and import
 $primary: #4b9cd3; // UNC Carolina Blue
 $secondary: #1a1a2e;
-$font-family-sans-serif: ('Inter', system-ui, -apple-system, sans-serif);
+$font-family-sans-serif: ('Source Serif 4', Georgia, serif);
+$headings-font-family:   ('Lato', system-ui, -apple-system, sans-serif);
 $border-radius: 0.375rem;
 $enable-negative-margins: true;
 
@@ -133,7 +134,14 @@ main > :not(router-outlet) > section:last-child {
   }
 }
 
-// 7. Skip link helper for keyboard users
+// 7. Shared tech badge (project cards, project detail, community)
+.tech-badge {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent-dark);
+  font-weight: 500;
+}
+
+// 8. Skip link helper for keyboard users
 .skip-link {
   position: absolute;
   top: -40px;

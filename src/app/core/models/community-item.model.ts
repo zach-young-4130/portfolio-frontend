@@ -5,6 +5,7 @@ export interface CommunityItem {
   url: string | null;
   role: string | null;
   year: string | null;
+  tech_stack: string | null;
   position: number | null;
   published: boolean;
 }
