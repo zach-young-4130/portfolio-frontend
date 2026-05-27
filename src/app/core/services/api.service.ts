@@ -1,7 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { timeout } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+
+const REQUEST_TIMEOUT_MS = 8000;
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -9,18 +12,18 @@ export class ApiService {
   private base = environment.apiBaseUrl;
 
   get<T>(path: string): Observable<T> {
-    return this.http.get<T>(`${this.base}/${path}`);
+    return this.http.get<T>(`${this.base}/${path}`).pipe(timeout(REQUEST_TIMEOUT_MS));
   }
 
   post<T>(path: string, body: unknown): Observable<T> {
-    return this.http.post<T>(`${this.base}/${path}`, body);
+    return this.http.post<T>(`${this.base}/${path}`, body).pipe(timeout(REQUEST_TIMEOUT_MS));
   }
 
   patch<T>(path: string, body: unknown): Observable<T> {
-    return this.http.patch<T>(`${this.base}/${path}`, body);
+    return this.http.patch<T>(`${this.base}/${path}`, body).pipe(timeout(REQUEST_TIMEOUT_MS));
   }
 
   delete<T>(path: string): Observable<T> {
-    return this.http.delete<T>(`${this.base}/${path}`);
+    return this.http.delete<T>(`${this.base}/${path}`).pipe(timeout(REQUEST_TIMEOUT_MS));
   }
 }

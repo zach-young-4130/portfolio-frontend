@@ -29,7 +29,8 @@ export class ProjectsListComponent implements OnInit {
           this.projects.set(res.projects);
           this.loading.set(false);
         },
-        error: () => this.loading.set(false),
+        error: () => { 
+          this.loading.set(false); },
       });
   }
 }

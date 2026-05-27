@@ -21,12 +21,7 @@ export const routes: Routes = [
     loadComponent: () => import('./features/faq/faq').then((m) => m.FaqComponent),
     title: 'FAQ',
   },
-  {
-    path: 'community',
-    loadComponent: () => import('./features/community/community').then((m) => m.CommunityComponent),
-    title: 'Community',
-  },
-  {
+{
     path: 'experience',
     loadComponent: () => import('./features/experience/experience').then((m) => m.ExperienceComponent),
     title: 'Experience',
