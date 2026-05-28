@@ -1,5 +1,8 @@
 {
   "buildCommand": "npm run build -- --configuration=production",
-  "outputDirectory": "dist/portfolio-frontend",
-  "framework": "angular"
+  "outputDirectory": "dist/portfolio-frontend/browser",
+  "framework": "angular",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.csr.html" }
+  ]
 }
