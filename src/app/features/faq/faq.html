@@ -6,7 +6,7 @@
   } @else if (items().length === 0) {
     <p class="text-center text-muted">No FAQ items yet.</p>
   } @else {
-    <div ngbAccordion class="mx-auto" style="max-width: 720px;" aria-label="Frequently asked questions">
+    <div ngbAccordion class="mx-auto" style="width: 100%; max-width: 720px; min-width: 320px;" aria-label="Frequently asked questions">
       @for (item of items(); track item.id) {
         <div ngbAccordionItem>
           <h2 ngbAccordionHeader>

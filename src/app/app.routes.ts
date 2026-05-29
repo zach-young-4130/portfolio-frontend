@@ -12,6 +12,11 @@ export const routes: Routes = [
     loadChildren: () => import('./features/projects/projects.routes').then((m) => m.PROJECTS_ROUTES),
   },
   {
+    path: 'about',
+    loadComponent: () => import('./features/about/about').then((m) => m.AboutComponent),
+    title: 'About — Zach Young',
+  },
+  {
     path: 'code',
     loadComponent: () => import('./features/code/code').then((m) => m.CodeComponent),
     title: 'Code',

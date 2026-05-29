@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { timeout } from 'rxjs/operators';
+import { retry, timeout } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 const REQUEST_TIMEOUT_MS = 8000;
@@ -12,7 +12,10 @@ export class ApiService {
   private base = environment.apiBaseUrl;
 
   get<T>(path: string): Observable<T> {
-    return this.http.get<T>(`${this.base}/${path}`).pipe(timeout(REQUEST_TIMEOUT_MS));
+    return this.http.get<T>(`${this.base}/${path}`).pipe(
+      timeout(REQUEST_TIMEOUT_MS),
+      retry({ count: 2, delay: 1500 }),
+    );
   }
 
   post<T>(path: string, body: unknown): Observable<T> {
