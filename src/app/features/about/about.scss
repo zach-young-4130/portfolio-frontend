@@ -2,12 +2,28 @@
   display: block;
 }
 
-.about-sidebar {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: 0.75rem;
-  padding: 1.5rem;
+.profile-photo {
+  width: 100%;
+  max-width: 280px;
+  border-radius: 1rem;
+  object-fit: cover;
+  display: block;
+  margin: 0 auto;
+
+  @media (min-width: 768px) {
+    margin: 0;
+  }
 }
+
+.profile-meta {
+  max-width: 280px;
+  margin: 0 auto;
+
+  @media (min-width: 768px) {
+    margin: 0;
+  }
+}
+
 
 .about-label {
   font-size: 0.6875rem;
