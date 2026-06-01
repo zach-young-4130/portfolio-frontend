@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, DestroyRef, inject, signal, OnInit 
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NgbAccordionModule } from '@ng-bootstrap/ng-bootstrap';
 import { FaqService } from '../../core/services/faq.service';
+import { SeoService } from '../../core/services/seo.service';
 import { FaqItem } from '../../core/models/faq-item.model';
 import { PageHeroComponent } from '../../shared/components/page-hero/page-hero';
 
@@ -19,6 +20,13 @@ export class FaqComponent implements OnInit {
 
   protected items = signal<FaqItem[]>([]);
   protected loading = signal(true);
+
+  constructor() {
+    inject(SeoService).set({
+      title: 'FAQ',
+      description: 'Common questions about stack, availability, experience, and approach to software engineering — answered by Zach Young, senior full-stack engineer.',
+    });
+  }
 
   ngOnInit(): void {
     this.faqService

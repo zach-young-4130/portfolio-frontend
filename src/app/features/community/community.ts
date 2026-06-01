@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, DestroyRef, inject, signal, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommunityService } from '../../core/services/community.service';
+import { SeoService } from '../../core/services/seo.service';
 import { CommunityItem } from '../../core/models/community-item.model';
 import { PageHeroComponent } from '../../shared/components/page-hero/page-hero';
 
@@ -18,6 +19,13 @@ export class CommunityComponent implements OnInit {
 
   protected items = signal<CommunityItem[]>([]);
   protected loading = signal(true);
+
+  constructor() {
+    inject(SeoService).set({
+      title: 'Community',
+      description: 'How Zach Young shows up beyond the keyboard — bootcamp instruction, mentorship, and developer community involvement across Missouri and Kentucky.',
+    });
+  }
 
   ngOnInit(): void {
     this.communityService
