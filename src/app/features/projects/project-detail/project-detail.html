@@ -13,7 +13,7 @@
       @if (p.cover_image_url) {
         <img [src]="p.cover_image_url" [alt]="p.title + ' cover image'" class="img-fluid rounded my-4" />
       }
-
+{{ p | json }}
       @if (p.technologies.length > 0) {
         <h2 class="h5 mt-4">Tech stack</h2>
         <ul class="list-inline mb-3" aria-label="Technologies">

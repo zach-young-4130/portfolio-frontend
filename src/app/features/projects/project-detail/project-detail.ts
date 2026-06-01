@@ -3,11 +3,11 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { ProjectsService } from '../../../core/services/projects.service';
 import { Project } from '../../../core/models/project.model';
-
+import { JsonPipe } from '@angular/common';
 @Component({
   selector: 'app-project-detail',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, JsonPipe],
   templateUrl: './project-detail.html',
   styleUrl: './project-detail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
