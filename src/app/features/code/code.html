@@ -403,29 +403,62 @@ def load_project(id)
 end</code></pre>
   </app-code-snippet>
 
-  <app-code-snippet label="weighted full-text search">
-    <h3 class="h5">Weighted full-text search — <code>'simple'</code> config, <code>setweight</code>, prefix matching</h3>
+  <app-code-snippet label="full-text search">
+    <h3 class="h5">Full-text search — PostgreSQL <code>tsvector</code>, weighted fields, GIN index, signal-driven frontend</h3>
     <p class="text-secondary">
-      The projects page searches across four fields with explicit PostgreSQL
-      weights: title and tagline rank highest (A), tech stack second (B),
-      description third (C). Two deliberate config choices make it work for
-      real data. First, <code>'simple'</code> instead of <code>'english'</code>
-      — the English config removes stop words and applies stemming, which
-      silently drops acronyms like <em>IHM</em> into an empty tsquery that
-      matches everything. Simple skips that entirely. Second,
-      <code>to_tsquery</code> with a <code>:*</code> suffix on each term
-      enables prefix matching — typing <em>ang</em> finds Angular before the
-      word is complete. A GIN index on the computed expression means the
-      database resolves matches from the index, not a table scan, then
-      eager-loads associations for only the matched rows — no N+1 on filtered
-      results. The frontend debounces 300ms and uses <code>switchMap</code> to
-      cancel in-flight requests when the user keeps typing.
+      Search is not a nice-to-have. Every production application — from
+      e-commerce platforms to AI-powered tools — depends on fast, relevant
+      search to drive user engagement and retention. Modern AI search systems
+      (semantic search, vector embeddings, LLM re-ranking) sit on top of the
+      same foundational layer: a structured, weighted document corpus. This
+      implementation uses PostgreSQL's native full-text search engine — no
+      external service, no Elasticsearch, no Algolia — and produces the same
+      weighted, indexed result set that AI ranking layers consume upstream.
     </p>
-<pre class="code-snippet"><code># app/models/project.rb
+    <p class="text-secondary">
+      Four fields are searched with explicit relevance weights:
+      title and tagline at <strong>A</strong> (highest),
+      tech stack at <strong>B</strong>,
+      description at <strong>C</strong>.
+      Two deliberate configuration choices make it work on real-world data.
+      First, <code>'simple'</code> instead of <code>'english'</code> — the
+      English config applies stop word removal and stemming, which silently
+      collapses acronyms like <em>IHM</em> into an empty tsquery that matches
+      everything. Simple skips normalization entirely: every token survives
+      intact. Second, <code>to_tsquery</code> with a <code>:*</code> prefix
+      suffix enables incremental matching — typing <em>ang</em> returns Angular
+      results before the word is complete, the same behavior users expect from
+      Google. A GIN index on the computed <code>tsvector</code> expression
+      means PostgreSQL resolves matching IDs entirely from the index — no table
+      scan — then eager-loads associations only for those rows. The frontend
+      pipeline debounces at 300ms and uses <code>switchMap</code> to cancel
+      any in-flight request the moment the user keeps typing, preventing stale
+      responses from landing out of order.
+    </p>
+<pre class="code-snippet"><code># ── PostgreSQL tsvector query ──────────────────────────────────────────────
+#
+# What PostgreSQL executes for q = "IHM":
+#
+#   safe_query  = "IHM:*"           (prefix match — IHM matches 'IHM Used Parts')
+#
+#   SELECT projects.*
+#   FROM   projects
+#   WHERE  (
+#            setweight(to_tsvector('simple', coalesce(title, '')),      'A') ||
+#            setweight(to_tsvector('simple', coalesce(tagline, '')),     'A') ||
+#            setweight(to_tsvector('simple', coalesce(tech_stack, '')),  'B') ||
+#            setweight(to_tsvector('simple', coalesce(description, '')), 'C')
+#          ) @@ to_tsquery('simple', 'IHM:*')
+#   AND    published = true
+#   ORDER  BY position;
+#
+# The GIN index resolves matching IDs before touching any row data.
+# includes(:technologies, :tags) then fetches associations for matched rows only.
+# ──────────────────────────────────────────────────────────────────────────
+
+# app/models/project.rb
 scope :search, ->(query) {{ '{' }}
   return all if query.blank?
-  # Strip tsquery special chars, append :* to each term for prefix matching.
-  # 'simple' config: no stemming, no stop word removal — acronyms survive intact.
   safe_query = query.split
     .map {{ '{' }} |w| w.gsub(/[^a-zA-Z0-9\-]/, "") {{ '}' }}
     .reject(&amp;:empty?)
@@ -445,28 +478,37 @@ scope :search, ->(query) {{ '{' }}
   )
 {{ '}' }}
 
-# GIN index — resolves matches from the index, not a full table scan
+# GIN index — matching IDs resolved from the index, not a table scan
 CREATE INDEX index_projects_on_fts ON projects USING gin ((
   setweight(to_tsvector('simple', coalesce(title, '')),      'A') ||
-  setweight(to_tsvector('simple', coalesce(tech_stack, '')), 'B') ||
+  setweight(to_tsvector('simple', coalesce(tagline, '')),     'A') ||
+  setweight(to_tsvector('simple', coalesce(tech_stack, '')),  'B') ||
   setweight(to_tsvector('simple', coalesce(description, '')), 'C')
 ));
 
 # app/controllers/api/v1/projects_controller.rb
+# search composes with includes — N+1 safe on any result set size
 def index
   scope = visible_scope_for(Project).includes(:technologies, :tags)
   scope = scope.search(params[:q]) if params[:q].present?
   render_success(projects: ProjectBlueprint.render_as_hash(scope))
 end
 
-// projects-list.ts — debounce + switchMap cancels stale requests
+// ── Angular signal pipeline ────────────────────────────────────────────────
+// projects-list.ts
+// Signal → Observable → debounce → switchMap (cancels stale requests) → API
+protected query = signal('');
+
 toObservable(this.query).pipe(
-  debounceTime(300),
-  distinctUntilChanged(),
+  debounceTime(300),          // wait for the user to pause typing
+  distinctUntilChanged(),     // skip if value didn't change
   tap(() =&gt; this.loading.set(true)),
   switchMap((q) =&gt; this.projectsService.list(q ? {{ '{' }} q {{ '}' }} : undefined)),
   takeUntilDestroyed(this.destroyRef),
-).subscribe(...);</code></pre>
+).subscribe({{ '{' }}
+  next: (res) =&gt; {{ '{' }} this.projects.set(res.projects); this.loading.set(false); {{ '}' }},
+  error: ()  =&gt; this.loading.set(false),
+{{ '}' }});</code></pre>
   </app-code-snippet>
 
   <!-- ============================================================ -->

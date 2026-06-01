@@ -32,8 +32,8 @@ export class CommunityComponent implements OnInit {
       .list()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (res) => {
-          this.items.set(res.community_items);
+        next: (items) => {
+          this.items.set(items);
           this.loading.set(false);
         },
         error: () => this.loading.set(false),

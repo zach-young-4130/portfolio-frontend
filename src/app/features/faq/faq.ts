@@ -33,8 +33,8 @@ export class FaqComponent implements OnInit {
       .list()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (res) => {
-          this.items.set(res.faq_items);
+        next: (items) => {
+          this.items.set(items);
           this.loading.set(false);
         },
         error: () => this.loading.set(false),

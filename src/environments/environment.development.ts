@@ -1,4 +1,4 @@
 export const environment = {
-  apiBaseUrl: 'http://localhost:5001/api/v1',
+  apiBaseUrl: 'https://portfolio-api-divine-leaf-7748.fly.dev/api/v1',
   googleClientId: '',
 };

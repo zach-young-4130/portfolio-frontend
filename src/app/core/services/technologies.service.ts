@@ -1,24 +1,10 @@
-import { Injectable, inject } from '@angular/core';
-import { ApiService } from './api.service';
+import { Injectable } from '@angular/core';
+import { CrudService } from './crud.service';
 import { Technology, TechnologyInput } from '../models/technology.model';
 
 @Injectable({ providedIn: 'root' })
-export class TechnologiesService {
-  private api = inject(ApiService);
-
-  list() {
-    return this.api.get<{ technologies: Technology[] }>('technologies');
-  }
-
-  create(data: TechnologyInput) {
-    return this.api.post<{ technology: Technology }>('technologies', { technology: data });
-  }
-
-  update(id: number, data: Partial<TechnologyInput>) {
-    return this.api.patch<{ technology: Technology }>(`technologies/${id}`, { technology: data });
-  }
-
-  remove(id: number) {
-    return this.api.delete<void>(`technologies/${id}`);
-  }
+export class TechnologiesService extends CrudService<Technology, TechnologyInput> {
+  readonly endpoint = 'technologies';
+  readonly resourceKey = 'technology';
+  readonly collectionKey = 'technologies';
 }

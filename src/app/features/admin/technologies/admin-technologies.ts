@@ -1,9 +1,9 @@
-import { Component, ChangeDetectionStrategy, DestroyRef, inject, signal, OnInit, TemplateRef, viewChild } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, ChangeDetectionStrategy, TemplateRef, inject, viewChild } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { NgbModal, NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
 import { TechnologiesService } from '../../../core/services/technologies.service';
-import { Technology } from '../../../core/models/technology.model';
+import { Technology, TechnologyInput } from '../../../core/models/technology.model';
+import { BaseCrudComponent } from '../base-crud.component';
 
 const CATEGORIES = ['language', 'framework', 'tool', 'platform', 'library'] as const;
 
@@ -15,83 +15,37 @@ const CATEGORIES = ['language', 'framework', 'tool', 'platform', 'library'] as c
   styleUrl: './admin-technologies.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AdminTechnologiesComponent implements OnInit {
+export class AdminTechnologiesComponent extends BaseCrudComponent<Technology> {
   private technologiesService = inject(TechnologiesService);
-  private modalService = inject(NgbModal);
   private fb = inject(FormBuilder);
-  private destroyRef = inject(DestroyRef);
-
-  protected technologies = signal<Technology[]>([]);
-  protected editing = signal<Technology | null>(null);
-  protected readonly categories = CATEGORIES;
 
   protected editModal = viewChild.required<TemplateRef<unknown>>('editModal');
   protected deleteModal = viewChild.required<TemplateRef<unknown>>('deleteModal');
+  protected editModalAriaLabel = 'tech-modal-title';
+  protected deleteModalAriaLabel = 'delete-tech-modal-title';
+  protected readonly categories = CATEGORIES;
 
   protected form = this.fb.nonNullable.group({
-    name: ['', [Validators.required]],
-    slug: ['', [Validators.required, Validators.pattern(/^[a-z0-9-]+$/)]],
+    name:     ['', [Validators.required]],
+    slug:     ['', [Validators.required, Validators.pattern(/^[a-z0-9-]+$/)]],
     category: [''],
   });
 
-  ngOnInit(): void {
-    this.refresh();
-  }
+  protected loadList()                     { return this.technologiesService.list(); }
+  protected createItem(data: unknown)      { return this.technologiesService.create(data as TechnologyInput); }
+  protected updateItem(id: number, data: unknown) { return this.technologiesService.update(id, data as Partial<TechnologyInput>); }
+  protected removeItem(id: number)         { return this.technologiesService.remove(id); }
 
-  protected openNew(): void {
-    this.editing.set(null);
+  protected resetForm(): void {
     this.form.reset({ name: '', slug: '', category: '' });
-    this.modalService.open(this.editModal(), { ariaLabelledBy: 'tech-modal-title' });
   }
 
-  protected openEdit(technology: Technology): void {
-    this.editing.set(technology);
-    this.form.reset({
-      name: technology.name,
-      slug: technology.slug,
-      category: technology.category ?? '',
-    });
-    this.modalService.open(this.editModal(), { ariaLabelledBy: 'tech-modal-title' });
+  protected populateForm(item: Technology): void {
+    this.form.reset({ name: item.name, slug: item.slug, category: item.category ?? '' });
   }
 
-  protected save(close: () => void): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
-    }
+  protected buildSaveData(): TechnologyInput {
     const raw = this.form.getRawValue();
-    const data = { ...raw, category: raw.category || null };
-    const current = this.editing();
-    const op = current
-      ? this.technologiesService.update(current.id, data)
-      : this.technologiesService.create({ name: data.name, slug: data.slug, category: data.category });
-    op.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      close();
-      this.refresh();
-    });
-  }
-
-  protected confirmDelete(technology: Technology): void {
-    this.editing.set(technology);
-    this.modalService
-      .open(this.deleteModal(), { ariaLabelledBy: 'delete-tech-modal-title' })
-      .result.then(
-        (confirmed) => {
-          if (confirmed) {
-            this.technologiesService
-              .remove(technology.id)
-              .pipe(takeUntilDestroyed(this.destroyRef))
-              .subscribe(() => this.refresh());
-          }
-        },
-        () => undefined,
-      );
-  }
-
-  private refresh(): void {
-    this.technologiesService
-      .list()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((res) => this.technologies.set(res.technologies));
+    return { name: raw.name, slug: raw.slug, category: raw.category || null };
   }
 }

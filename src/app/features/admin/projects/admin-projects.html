@@ -4,7 +4,7 @@
     <button type="button" class="btn btn-primary" (click)="openNew()">New project</button>
   </header>
 
-  @if (projects().length === 0) {
+  @if (items().length === 0) {
     <p class="text-muted">No projects yet.</p>
   } @else {
     <div class="table-responsive">
@@ -20,7 +20,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (project of projects(); track project.id) {
+          @for (project of items(); track project.id) {
             <tr>
               <th scope="row" class="fw-normal">{{ project.title }}</th>
               <td>{{ project.published ? 'Yes' : 'No' }}</td>

@@ -37,7 +37,7 @@ export class AdminDashboardComponent implements OnInit {
       .list()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (res) => this.projectsCount.set(res.projects.length),
+        next: (res) => this.projectsCount.set(res.projects.length), // ProjectsService keeps envelope
         error: () => this.projectsCount.set(0),
       });
 
@@ -45,7 +45,7 @@ export class AdminDashboardComponent implements OnInit {
       .list()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (res) => this.faqCount.set(res.faq_items.length),
+        next: (items) => this.faqCount.set(items.length),
         error: () => this.faqCount.set(0),
       });
 
@@ -53,7 +53,7 @@ export class AdminDashboardComponent implements OnInit {
       .list()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (res) => this.communityCount.set(res.community_items.length),
+        next: (items) => this.communityCount.set(items.length),
         error: () => this.communityCount.set(0),
       });
 
@@ -69,7 +69,7 @@ export class AdminDashboardComponent implements OnInit {
       .list()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (res) => this.technologiesCount.set(res.technologies.length),
+        next: (items) => this.technologiesCount.set(items.length),
         error: () => this.technologiesCount.set(0),
       });
 
@@ -77,7 +77,7 @@ export class AdminDashboardComponent implements OnInit {
       .list()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (res) => this.tagsCount.set(res.tags.length),
+        next: (items) => this.tagsCount.set(items.length),
         error: () => this.tagsCount.set(0),
       });
   }

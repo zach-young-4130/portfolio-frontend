@@ -4,7 +4,7 @@
     <button type="button" class="btn btn-primary" (click)="openNew()">New technology</button>
   </header>
 
-  @if (technologies().length === 0) {
+  @if (items().length === 0) {
     <p class="text-muted">No technologies yet.</p>
   } @else {
     <div class="table-responsive">
@@ -19,7 +19,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (tech of technologies(); track tech.id) {
+          @for (tech of items(); track tech.id) {
             <tr>
               <th scope="row" class="fw-normal">{{ tech.name }}</th>
               <td><code>{{ tech.slug }}</code></td>

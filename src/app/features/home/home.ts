@@ -77,6 +77,6 @@ export class HomeComponent implements OnInit {
     this.faqService
       .list()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((res) => this.faqItems.set(res.faq_items));
+      .subscribe((items) => this.faqItems.set(items));
   }
 }
