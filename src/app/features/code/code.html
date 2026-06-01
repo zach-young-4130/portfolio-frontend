@@ -6,14 +6,14 @@
 
 <section class="container py-5">
   <p class="lead mb-5">
-    A guided tour of this site's source. The trees below show the shape of the
-    front-end and back-end. The snippets after them are grouped by subject —
-    auth, API conventions, services, frontend patterns, and domain models —
-    so you can skip to the area you care about. Living document; I'll keep
-    adding when something interesting shows up.
+    A guided tour of this site's source. The trees show the shape of each side
+    of the stack. The snippets after them are the decisions worth explaining —
+    auth, API conventions, data modeling, and frontend patterns. Generic Rails
+    and Angular is left out; everything here has a reason behind it.
   </p>
 
-  <h2 class="h3 mt-5 mb-3">Front-end (Angular 21 + SSR)</h2>
+  <app-code-snippet label="Frontend structure">
+  <h3 class="h5">Front-end (Angular 21 + SSR)</h3>
   <p class="text-secondary">
     Standalone-first, signal-driven, lazy-loaded. Bootstrap 5 with
     <code>data-bs-theme</code> wired into a <code>ThemeService</code> so light
@@ -27,8 +27,8 @@
 │   │   │   │   ├── auth.guard.ts            # any signed-in user
 │   │   │   │   └── admin.guard.ts           # admin role only
 │   │   │   ├── interceptors/
-│   │   │   │   └── credentials.interceptor.ts
-│   │   │   ├── models/                      # Project class, User, FaqItem, …
+│   │   │   │   └── auth.interceptor.ts      # attaches Bearer token
+│   │   │   ├── models/                      # Project class, User, Tag, Technology…
 │   │   │   └── services/                    # api, auth, theme, feature services
 │   │   ├── shared/
 │   │   │   ├── components/
@@ -36,7 +36,7 @@
 │   │   │   │   ├── footer/
 │   │   │   │   ├── project-card/
 │   │   │   │   ├── page-hero/               # reused across all sub-pages
-│   │   │   │   └── contact-form/            # used by /contact and home
+│   │   │   │   └── contact-form/
 │   │   │   └── directives/
 │   │   │       └── parallax.directive.ts    # SSR-safe scroll parallax
 │   │   ├── features/                # lazy-loaded route bundles
@@ -44,33 +44,39 @@
 │   │   │   ├── projects/
 │   │   │   │   ├── projects-list/
 │   │   │   │   └── project-detail/
+│   │   │   ├── about/
+│   │   │   ├── experience/
 │   │   │   ├── faq/
 │   │   │   ├── community/
 │   │   │   ├── contact/
 │   │   │   ├── code/                        # this page
 │   │   │   └── admin/
-│   │   │       ├── login/                   # password + Google Sign-In
+│   │   │       ├── login/
 │   │   │       ├── dashboard/
-│   │   │       ├── projects/
+│   │   │       ├── projects/                # CRUD + technology & tag assignment
+│   │   │       ├── technologies/            # manage Technology records
+│   │   │       ├── tags/                    # manage Tag records
 │   │   │       ├── faq/
-│   │   │       ├── community/
+│   │   │       ├── community/               # CRUD + tag assignment
 │   │   │       └── messages/
 │   │   ├── app.config.ts                    # standalone providers, http, hydration
 │   │   ├── app.routes.ts                    # lazy routes + adminGuard on /admin
-│   │   └── app.ts                           # root component
+│   │   └── app.ts
 │   ├── styles.scss                          # bootstrap import + theme tokens
 │   └── main.ts / main.server.ts             # browser + SSR bootstrap
-└── public/                                  # static hero images (served at /)
+└── public/                                  # static assets served at /
 </code></pre>
+  </app-code-snippet>
 
-  <h2 class="h3 mt-5 mb-3">Back-end (Rails 8 API-only)</h2>
+  <app-code-snippet label="Backend structure">
+  <h3 class="h5">Back-end (Rails 8 API-only)</h3>
   <p class="text-secondary">
     Versioned namespace, every endpoint documented by an rswag request spec
     that emits <code>swagger/v1/swagger.yaml</code> as a side effect. Auth is
-    a stateless JWT — login (password or Google) returns a Bearer token, the
-    SPA sends it in the <code>Authorization</code> header on every write. No
-    cookies, no CSRF middleware: the header is not auto-attached cross-origin,
-    so CSRF is structurally out of reach.
+    a stateless JWT — login returns a Bearer token, the SPA sends it in the
+    <code>Authorization</code> header on every write. No cookies, no CSRF
+    middleware: the header is not auto-attached cross-origin, so CSRF is
+    structurally out of reach.
   </p>
 <pre class="code-tree"><code>portfolio-api/
 ├── app/
@@ -79,45 +85,53 @@
 │   │   │   └── authentication.rb            # current_user, authenticate!, issue_token
 │   │   └── api/v1/
 │   │       ├── base_controller.rb           # render_success / render_error / authorize_admin!
-│   │       ├── sessions_controller.rb       # password + Google login
-│   │       ├── projects_controller.rb
+│   │       ├── sessions_controller.rb       # password + Google login, lockout logic
+│   │       ├── projects_controller.rb       # includes(:technologies, :tags) on every read
+│   │       ├── technologies_controller.rb
+│   │       ├── tags_controller.rb
 │   │       ├── faq_items_controller.rb
 │   │       ├── community_items_controller.rb
 │   │       └── contact_messages_controller.rb
-│   ├── blueprints/                          # Blueprinter serializers — every endpoint uses one
-│   │   ├── user_blueprint.rb
-│   │   ├── project_blueprint.rb
+│   ├── blueprints/                          # Blueprinter serializers
+│   │   ├── project_blueprint.rb             # association :technologies + :tags
+│   │   ├── technology_blueprint.rb
+│   │   ├── tag_blueprint.rb
+│   │   ├── community_item_blueprint.rb      # association :tags
 │   │   ├── faq_item_blueprint.rb
-│   │   ├── community_item_blueprint.rb
-│   │   └── contact_message_blueprint.rb
+│   │   ├── contact_message_blueprint.rb
+│   │   └── user_blueprint.rb
 │   ├── services/
-│   │   ├── service_result.rb                # {{ '{' }} ok:, data: {{ '}' }}/{{ '{' }} ok:, error: {{ '}' }} envelope
 │   │   ├── json_web_token.rb                # HS256 encode/decode
 │   │   └── google_id_token_verifier.rb      # validates GIS tokens against Google's pubkeys
 │   └── models/
 │       ├── user.rb                          # role, lockout columns, has_secure_password
-│       ├── project.rb                       # featured / published scopes
-│       ├── faq_item.rb
+│       ├── project.rb                       # featured/published scopes, taggable, ordered techs
+│       ├── project_technology.rb            # position-ordered join
+│       ├── technology.rb                    # name, slug, category
+│       ├── tagging.rb                       # polymorphic — serves Project and CommunityItem
+│       ├── tag.rb
 │       ├── community_item.rb
-│       └── contact_message.rb               # email format + normalize
+│       ├── faq_item.rb
+│       └── contact_message.rb
 ├── config/
 │   ├── routes.rb                            # /api/v1 namespace
-│   ├── application.rb                       # api_only, no session middleware
 │   └── initializers/
-│       ├── cors.rb                          # localhost + production allowlist
 │       └── rack_attack.rb                   # login rate limiting
 ├── db/
 │   ├── migrate/                             # null:false + indexes on filtered columns
 │   ├── schema.rb
-│   └── seeds.rb                             # idempotent admin + sample content
+│   └── seeds.rb                             # idempotent — admin, content, associations
+├── lib/tasks/
+│   └── seed.rake                            # bin/rails seed:all — run post-deploy
 ├── spec/
 │   ├── factories/
 │   ├── models/
-│   ├── requests/api/v1/                     # rswag DSL — also generates the swagger
+│   ├── requests/api/v1/                     # rswag DSL — runs assertions + emits swagger
 │   └── support/
 │       └── auth_helpers.rb
-└── swagger/v1/swagger.yaml                  # ← generated, don't hand-edit
+└── swagger/v1/swagger.yaml                  # ← generated, never hand-edited
 </code></pre>
+  </app-code-snippet>
 
   <hr class="my-5" />
 
@@ -127,37 +141,40 @@
   <h2 class="h3 mb-2">Authentication &amp; Authorization</h2>
   <p class="text-secondary mb-4">
     Stateless JWTs, no cookies, two login surfaces (password + Google), and a
-    role split so non-admin users can sign up without unlocking the CMS.
+    role split so non-admin users can exist without touching the CMS.
   </p>
 
   <app-code-snippet label="visible_scope_for helper">
-    <h3 class="h5">Auth-aware scope on the API base controller</h3>
+    <h3 class="h5">Auth-aware scope — one method, every content controller</h3>
     <p class="text-secondary">
-      Public callers see only published records. The same URL returns drafts to
-      an authenticated admin. One method on <code>BaseController</code>, every
-      content controller reuses it.
+      Public callers see only published records. The same URL returns all
+      records including drafts to an authenticated admin. One helper on
+      <code>BaseController</code>, every content controller calls it. No
+      per-controller conditional, no duplicated scope logic.
     </p>
 <pre class="code-snippet"><code># app/controllers/api/v1/base_controller.rb
 def visible_scope_for(model_class)
   current_user&amp;.admin? ? model_class.order(:position) : model_class.published
 end
 
-# usage
+# usage — same one-liner across every index action
 def index
-  render_success(projects: ProjectBlueprint.render_as_hash(visible_scope_for(Project)))
+  scope = visible_scope_for(Project).includes(:technologies, :tags)
+  render_success(projects: ProjectBlueprint.render_as_hash(scope))
 end</code></pre>
   </app-code-snippet>
 
   <app-code-snippet label="JWT auth interceptor">
-    <h3 class="h5">The JWT auth interceptor</h3>
+    <h3 class="h5">JWT auth interceptor — functional, no class boilerplate</h3>
     <p class="text-secondary">
-      One interceptor wires <code>Authorization: Bearer ...</code> onto every
-      outbound request when a token is present in <code>TokenService</code>.
-      No cookies, no <code>withCredentials</code>, no CSRF surface — the
-      header is not auto-attached cross-origin, so attackers can't ride it.
+      One functional interceptor attaches <code>Authorization: Bearer ...</code>
+      to every outbound request when a token is present. No cookies, no
+      <code>withCredentials</code>, no CSRF exposure — the
+      <code>Authorization</code> header is not auto-attached by browsers on
+      cross-origin requests, so an attacker can never ride it.
     </p>
 <pre class="code-snippet"><code>// core/interceptors/auth.interceptor.ts
-export const authInterceptor: HttpInterceptorFn = (req, next) =&gt; {{ '{' }}
+export const authInterceptor: HttpInterceptorFn = (req, next) => {{ '{' }}
   const token = inject(TokenService).get();
   return token
     ? next(req.clone({{ '{' }} setHeaders: {{ '{' }} Authorization: `Bearer ${{ '$' }}{{ '{' }}token{{ '}' }}` {{ '}' }} {{ '}' }}))
@@ -166,17 +183,19 @@ export const authInterceptor: HttpInterceptorFn = (req, next) =&gt; {{ '{' }}
   </app-code-snippet>
 
   <app-code-snippet label="stateless JWT service">
-    <h3 class="h5">Stateless JWT — one service, two methods</h3>
+    <h3 class="h5">Stateless JWT — HS256, 7-day expiry, nil on any decode error</h3>
     <p class="text-secondary">
       Login signs a JWT with <code>secret_key_base</code>; every subsequent
       request decodes the <code>Authorization: Bearer</code> header in the
       <code>Authentication</code> concern. No sessions, no cookies, no
-      <code>SameSite</code>/<code>Secure</code> dance to keep dev and prod in
-      sync.
+      <code>SameSite</code> / <code>Secure</code> dance to keep dev and prod
+      in sync. <code>rescue</code> returns <code>nil</code> on any decode
+      failure — expired, tampered, or malformed tokens all resolve to
+      unauthenticated without leaking detail.
     </p>
 <pre class="code-snippet"><code># app/services/json_web_token.rb
 class JsonWebToken
-  ALGORITHM = "HS256"
+  ALGORITHM  = "HS256"
   DEFAULT_EXP = 7.days
 
   def self.encode(payload, exp: DEFAULT_EXP.from_now)
@@ -196,24 +215,23 @@ end</code></pre>
   <app-code-snippet label="authGuard and adminGuard">
     <h3 class="h5">authGuard &amp; adminGuard — return a UrlTree, not a navigate()</h3>
     <p class="text-secondary">
-      Functional guards. Returning a <code>UrlTree</code> lets Angular handle
-      the redirect itself — no race conditions with the route's own navigation
-      and no imperative <code>router.navigate()</code> hiding inside a guard.
-      Two guards: <code>authGuard</code> protects anything that requires a
-      logged-in user; <code>adminGuard</code> is stricter and bounces
-      non-admin visitors to the home page instead of leaving them in a
-      permission limbo.
+      Functional guards. Returning a <code>UrlTree</code> lets Angular own
+      the redirect — no race conditions with the router's own navigation,
+      no imperative <code>router.navigate()</code> buried in a guard.
+      Two tiers: <code>authGuard</code> requires any signed-in user;
+      <code>adminGuard</code> also checks the role and bounces non-admins
+      to home instead of leaving them in a permission limbo.
     </p>
 <pre class="code-snippet"><code>// core/guards/auth.guard.ts
-export const authGuard: CanActivateFn = () =&gt; {{ '{' }}
-  const auth = inject(AuthService);
+export const authGuard: CanActivateFn = () => {{ '{' }}
+  const auth   = inject(AuthService);
   const router = inject(Router);
   return auth.isAuthenticated() ? true : router.createUrlTree(['/admin/login']);
 {{ '}' }};
 
 // core/guards/admin.guard.ts
-export const adminGuard: CanActivateFn = () =&gt; {{ '{' }}
-  const auth = inject(AuthService);
+export const adminGuard: CanActivateFn = () => {{ '{' }}
+  const auth   = inject(AuthService);
   const router = inject(Router);
   if (!auth.isAuthenticated()) return router.createUrlTree(['/admin/login']);
   if (!auth.isAdmin())         return router.createUrlTree(['/']);
@@ -222,18 +240,19 @@ export const adminGuard: CanActivateFn = () =&gt; {{ '{' }}
   </app-code-snippet>
 
   <app-code-snippet label="login hardening">
-    <h3 class="h5">Login hardening — three layers, no security through obscurity</h3>
+    <h3 class="h5">Login hardening — three independent layers</h3>
     <p class="text-secondary">
-      The admin route is public; the defenses are not. <strong>Rate limiting</strong>
-      via <code>rack-attack</code> caps brute-force attempts at 5 per IP per 5
-      minutes. <strong>Per-account lockout</strong> survives IP rotation:
+      The admin route is public; the defenses are not.
+      <strong>Rate limiting</strong> via <code>rack-attack</code> caps
+      brute-force at 5 attempts per IP per 5 minutes.
+      <strong>Per-account lockout</strong> survives IP rotation —
       <code>failed_attempts</code> and <code>locked_until</code> on the user
-      track the counter, and 15 minutes of lockout kicks in after 5 misses.
+      record track the counter regardless of which IP is hitting it.
       <strong>Timing-safe auth</strong> via Rails 7.1+
       <code>User.authenticate_by</code> runs bcrypt whether or not the email
-      exists, so response time can't enumerate accounts. The locked response
-      includes <code>locked_until</code> so the frontend can show a real
-      countdown.
+      exists, so response time can't be used to enumerate accounts. The locked
+      response includes <code>locked_until</code> so the frontend renders a
+      real countdown without a second request.
     </p>
 <pre class="code-snippet"><code># config/initializers/rack_attack.rb
 class Rack::Attack
@@ -243,14 +262,11 @@ class Rack::Attack
 end
 
 # app/models/user.rb
-MAX_FAILED_ATTEMPTS = 5
-LOCKOUT_DURATION    = 15.minutes
-
-def locked? = locked_until.present? &amp;&amp; locked_until &gt; Time.current
+def locked? = locked_until.present? &amp;&amp; locked_until > Time.current
 
 def register_failed_attempt!
   new_count = failed_attempts + 1
-  if new_count &gt;= MAX_FAILED_ATTEMPTS
+  if new_count >= MAX_FAILED_ATTEMPTS
     update_columns(failed_attempts: new_count, locked_until: LOCKOUT_DURATION.from_now)
   else
     update_columns(failed_attempts: new_count)
@@ -261,14 +277,11 @@ end
 def create
   existing = User.find_by(email: params[:email])
   if existing&amp;.locked?
-    return render_error(
-      "Account temporarily locked.",
+    return render_error("Account temporarily locked.",
       status: :unauthorized,
-      extra: {{ '{' }} locked_until: existing.locked_until.iso8601 {{ '}' }}
-    )
+      extra: {{ '{' }} locked_until: existing.locked_until.iso8601 {{ '}' }})
   end
 
-  # bcrypt runs whether or not the user exists → no timing enumeration
   user = User.authenticate_by(email: params[:email], password: params[:password])
   if user
     user.reset_failed_attempts!
@@ -285,58 +298,23 @@ end</code></pre>
   <!-- ============================================================ -->
   <h2 class="h3 mt-5 mb-2">API Patterns</h2>
   <p class="text-secondary mb-4">
-    Two response helpers, every endpoint, one error shape. Tests double as
-    OpenAPI docs. Allowlists are tight and explicit.
+    Tests double as OpenAPI docs. Strong params in the Rails 8 style. N+1s
+    caught at the query layer, not discovered in production.
   </p>
 
-  <app-code-snippet label="render_success and render_error">
-    <h3 class="h5">Two helpers, every endpoint — <code>render_success</code> + <code>render_error</code></h3>
-    <p class="text-secondary">
-      Every controller funnels through exactly two helpers on
-      <code>BaseController</code>. Payloads handed to <code>render_success</code>
-      are always Blueprinter hashes — the helper owns the envelope (status +
-      json wrapper), never serialization. <code>render_error</code> accepts an
-      AR record, a string, or an array, and always emits
-      <code>{{ '{' }} errors: [...] {{ '}' }}</code> so the frontend can
-      type-narrow on a single shape. Pass <code>extra:</code> for structured
-      side-info like <code>locked_until</code>.
-    </p>
-<pre class="code-snippet"><code># app/controllers/api/v1/base_controller.rb
-def render_success(status: :ok, **payload)
-  render json: payload, status: status
-end
-
-def render_error(error, status: :unprocessable_entity, extra: {{ '{' }}{{ '}' }})
-  errors =
-    case error
-    when ActiveRecord::Base then error.errors.as_json(full_messages: true)
-    when Array then error.map(&amp;:to_s)
-    else [ error.to_s ]
-    end
-  render json: {{ '{' }} errors: errors, **extra {{ '}' }}, status: status
-end
-
-# app/controllers/api/v1/projects_controller.rb
-def create
-  project = Project.new(project_params)
-  if project.save
-    render_success(project: ProjectBlueprint.render_as_hash(project), status: :created)
-  else
-    render_error(project)            # 422 with AR errors
-  end
-end</code></pre>
-  </app-code-snippet>
-
   <app-code-snippet label="rswag request spec">
-    <h3 class="h5">rswag — the request spec IS the API doc</h3>
+    <h3 class="h5">rswag — the request spec IS the API contract</h3>
     <p class="text-secondary">
-      Every endpoint has a request spec in the rswag DSL. The same file runs
-      assertions <em>and</em> emits <code>swagger/v1/swagger.yaml</code>.
-      "Document the API later" is no longer a thing on this codebase.
+      Every endpoint has a request spec written in the rswag DSL. The same
+      file runs assertions <em>and</em> emits
+      <code>swagger/v1/swagger.yaml</code> as a side effect.
+      "Document the API later" is structurally impossible on this codebase —
+      the spec failing means the doc is wrong, and the doc being wrong means
+      the spec is missing.
     </p>
 <pre class="code-snippet"><code># spec/requests/api/v1/projects_spec.rb
 path "/api/v1/projects" do
-  get("List projects (published only when public; all when authenticated)") do
+  get("List projects") do
     tags "Projects"
     produces "application/json"
 
@@ -346,88 +324,360 @@ path "/api/v1/projects" do
              required: %w[projects]
 
       before do
-        create(:project, title: "Public", published: true)
-        create(:project, title: "Hidden Draft", published: false)
+        create(:project, title: "Published", published: true)
+        create(:project, title: "Draft",     published: false)
       end
 
       run_test! do |response|
         titles = JSON.parse(response.body)["projects"].map {{ '{' }} |p| p["title"] {{ '}' }}
-        expect(titles).to include("Public")
-        expect(titles).not_to include("Hidden Draft")
+        expect(titles).to     include("Published")
+        expect(titles).not_to include("Draft")
       end
     end
   end
 end</code></pre>
   </app-code-snippet>
 
-  <app-code-snippet label="CORS configuration">
-    <h3 class="h5">CORS — narrow allowlist, no credentials needed</h3>
+  <app-code-snippet label="params.expect with association IDs">
+    <h3 class="h5">Rails 8 <code>params.expect</code> — accepting association ID arrays</h3>
     <p class="text-secondary">
-      No CSRF middleware. With JWT in the <code>Authorization</code> header
-      (not a cookie), browsers don't auto-attach it cross-origin — CSRF is
-      structurally impossible. The CORS allowlist exists to limit who can
-      even reach the API.
+      Rails 8 replaced <code>params.require.permit</code> with
+      <code>params.expect</code>, which raises on unexpected input rather
+      than silently dropping it. The non-obvious part is accepting
+      <code>technology_ids</code> and <code>tag_ids</code> as typed arrays
+      in the same call — the nested hash at the end of the array is the
+      Rails idiom for "these keys must be arrays." One API call atomically
+      replaces a project's M:M associations without a separate endpoint.
     </p>
-<pre class="code-snippet"><code># config/initializers/cors.rb
-Rails.application.config.middleware.insert_before 0, Rack::Cors do
-  allow do
-    origins "http://localhost:4200", "http://127.0.0.1:4200",
-            "https://zachyoung.com", "https://www.zachyoung.com"
+<pre class="code-snippet"><code># app/controllers/api/v1/projects_controller.rb
+def project_params
+  params.expect(project: [
+    :title, :tagline, :description, :tech_stack,
+    :cover_image_url, :live_url, :repo_url,
+    :featured, :position, :published,
+    :project_start, :project_end,
+    {{ '{' }} technology_ids: [], tag_ids: [] {{ '}' }}
+  ])
+end
 
-    resource "*",
-      headers: :any,
-      expose:  %w[Authorization],
-      methods: %i[get post put patch delete options head]
+# The frontend sends a flat payload — associations included
+# {{ '{' }} project: {{ '{' }} title: "…", technology_ids: [1, 3], tag_ids: [2] {{ '}' }} {{ '}' }}</code></pre>
+  </app-code-snippet>
+
+  <app-code-snippet label="N+1 prevention">
+    <h3 class="h5">N+1 prevention — <code>includes</code> on reads, re-fetch after writes</h3>
+    <p class="text-secondary">
+      <code>includes(:technologies, :tags)</code> on the index query is the
+      obvious half: three queries regardless of how many projects are
+      returned. The less obvious half is the re-fetch after
+      <code>create</code> and <code>update</code>. When you call
+      <code>project.update(technology_ids: [1, 2])</code>, ActiveRecord
+      updates the join table but the in-memory association is stale —
+      returning that object gives the frontend a corrupt data object with
+      missing or outdated associations. The frontend then either renders
+      incorrect state or fires follow-up requests to reconcile. Neither is
+      acceptable. <code>load_project</code> re-fetches once with
+      <code>includes</code> so the response is always complete and correct
+      on the first round-trip — no redundant calls, no stale UI.
+    </p>
+<pre class="code-snippet"><code># app/controllers/api/v1/projects_controller.rb
+
+def index
+  # 3 queries total regardless of project count
+  scope = visible_scope_for(Project).includes(:technologies, :tags)
+  render_success(projects: ProjectBlueprint.render_as_hash(scope))
+end
+
+def create
+  project = Project.new(project_params)
+  if project.save
+    # Re-fetch — in-memory associations are stale after setting _ids
+    render_success(project: ProjectBlueprint.render_as_hash(load_project(project.id)), status: :created)
+  else
+    render_error(project)
   end
+end
+
+def load_project(id)
+  Project.includes(:technologies, :tags).find(id)
 end</code></pre>
   </app-code-snippet>
 
   <!-- ============================================================ -->
-  <!-- Section: Service Architecture                                 -->
+  <!-- Section: Data Modeling                                        -->
   <!-- ============================================================ -->
-  <h2 class="h3 mt-5 mb-2">Service Architecture</h2>
+  <h2 class="h3 mt-5 mb-2">Data Modeling</h2>
   <p class="text-secondary mb-4">
-    Service objects return a normalized envelope, so callers pattern-match
-    on <code>:ok</code> instead of branching on exceptions, nils, and
-    sentinels.
+    One polymorphic join table for tags. A position-scoped join for
+    technologies. Frontend models that graduate from interfaces to classes
+    when they need to carry behavior.
   </p>
 
-  <app-code-snippet label="ServiceResult envelope">
-    <h3 class="h5"><code>ServiceResult</code> — one envelope every service returns</h3>
+  <app-code-snippet label="polymorphic tagging">
+    <h3 class="h5">Polymorphic tagging — one <code>taggings</code> table, multiple models</h3>
     <p class="text-secondary">
-      Each service exposes a single <code>#call</code>. The result is always
-      either <code>{{ '{' }} ok: true, data: ... {{ '}' }}</code> or
-      <code>{{ '{' }} ok: false, error: ... {{ '}' }}</code>. The module is
-      callable as <code>ServiceResult.success(...)</code> directly or as bare
-      <code>success(...)</code> / <code>error(...)</code> once
-      <code>include</code>d.
+      <code>Project</code> and <code>CommunityItem</code> both support tags
+      through a single polymorphic <code>Tagging</code> join model. The
+      uniqueness constraint scoped to <code>[taggable_type, taggable_id]</code>
+      enforces no duplicate tags per record at the database level. Blueprinter's
+      <code>association</code> declaration renders both sides with no extra
+      controller work — just <code>includes(:tags)</code> upstream to avoid
+      N+1s.
     </p>
-<pre class="code-snippet"><code># app/services/service_result.rb
-module ServiceResult
-  module_function
+<pre class="code-snippet"><code># app/models/tagging.rb
+class Tagging &lt; ApplicationRecord
+  belongs_to :tag
+  belongs_to :taggable, polymorphic: true
 
-  def success(data = nil) = {{ '{' }} ok: true,  data: data {{ '}' }}
-  def error(error)        = {{ '{' }} ok: false, error: error {{ '}' }}
+  validates :tag_id, uniqueness: {{ '{' }} scope: %i[taggable_type taggable_id] {{ '}' }}
 end
 
-# Example service
-class PublishPostService
-  include ServiceResult
-
-  def call(post)
-    return error("Post not found") if post.nil?
-    post.update!(published: true)
-    success(post: post)
-  rescue ActiveRecord::RecordInvalid =&gt; e
-    error(e.record)                 # render_error speaks AR records natively
-  end
+# Both models — same interface, same query path
+class Project &lt; ApplicationRecord
+  has_many :taggings, as: :taggable, dependent: :destroy
+  has_many :tags, through: :taggings
 end
 
-# Controller — pattern-match on :ok, hand the payload to render_*
-result = PublishPostService.new.call(post)
-result[:ok] \
-  ? render_success(post: PostBlueprint.render_as_hash(result[:data][:post]))
-  : render_error(result[:error])</code></pre>
+class CommunityItem &lt; ApplicationRecord
+  has_many :taggings, as: :taggable, dependent: :destroy
+  has_many :tags, through: :taggings
+end
+
+# Blueprint — association renders automatically once includes is in place
+class ProjectBlueprint &lt; Blueprinter::Base
+  association :technologies, blueprint: TechnologyBlueprint
+  association :tags,         blueprint: TagBlueprint
+end</code></pre>
+  </app-code-snippet>
+
+  <app-code-snippet label="ordered join table">
+    <h3 class="h5">Ordered join table — scope on the association, not the query</h3>
+    <p class="text-secondary">
+      Technologies on a project are displayed in a deliberate order set in
+      the admin. Rather than sorting at render time or adding an
+      <code>ORDER BY</code> on every query, the ordering lives on the
+      <code>project_technologies</code> association itself via a proc scope.
+      Any caller that loads <code>project.technologies</code> gets them
+      ordered by position — no one has to remember to sort.
+    </p>
+<pre class="code-snippet"><code># app/models/project.rb
+class Project &lt; ApplicationRecord
+  # Proc scope on the join — ordering is part of the association contract
+  has_many :project_technologies, -&gt; {{ '{' }} order(:position) {{ '}' }}, dependent: :destroy
+  has_many :technologies, through: :project_technologies
+end</code></pre>
+  </app-code-snippet>
+
+  <app-code-snippet label="Project model class">
+    <h3 class="h5">Frontend Project — interface promoted to class with computed fields</h3>
+    <p class="text-secondary">
+      <code>ProjectData</code> describes the raw API shape.
+      <code>Project</code> wraps it as a real class so it can carry behavior.
+      <code>time_ago</code> is computed once in the constructor against
+      <code>project_end</code> and stored as a <code>readonly</code> field —
+      cheaper than a getter, reads the same in templates.
+      The <code>ProjectsService</code> maps every API response through
+      <code>new Project(p)</code> so consumers always receive instances, never
+      plain objects.
+    </p>
+<pre class="code-snippet"><code>// core/models/project.model.ts
+export interface ProjectData {{ '{' }}
+  id: number; title: string;
+  project_start: string | null;
+  project_end:   string | null;
+  technologies:  Technology[];
+  tags:          Tag[];
+{{ '}' }}
+
+export class Project {{ '{' }}
+  readonly id: number;
+  readonly title: string;
+  readonly project_start: string | null;
+  readonly project_end:   string | null;
+  readonly time_ago:      string;
+  readonly technologies:  Technology[];
+  readonly tags:          Tag[];
+
+  constructor(data: ProjectData, now: Date = new Date()) {{ '{' }}
+    this.id           = data.id;
+    this.title        = data.title;
+    this.project_start = data.project_start;
+    this.project_end  = data.project_end;
+    this.time_ago     = Project.computeTimeAgo(now, data.project_end);
+    this.technologies = data.technologies ?? [];
+    this.tags         = data.tags ?? [];
+    // …remaining scalar fields assigned the same way
+  {{ '}' }}
+
+  private static computeTimeAgo(now: Date, end: string | null): string {{ '{' }}
+    if (!end) return '';
+    const days = Math.floor((now.getTime() - new Date(end).getTime()) / 86_400_000);
+    if (days < 1)  return 'today';
+    if (days < 7)  return `${{ '$' }}{{ '{' }}days{{ '}' }} day${{ '$' }}{{ '{' }}days === 1 ? '' : 's'{{ '}' }} ago`;
+    const weeks = Math.floor(days / 7);
+    if (weeks < 5) return `${{ '$' }}{{ '{' }}weeks{{ '}' }} week${{ '$' }}{{ '{' }}weeks === 1 ? '' : 's'{{ '}' }} ago`;
+    const months = Math.floor(days / 30.44);
+    if (months < 12) return `${{ '$' }}{{ '{' }}months{{ '}' }} month${{ '$' }}{{ '{' }}months === 1 ? '' : 's'{{ '}' }} ago`;
+    const years = Math.floor(days / 365.25);
+    return `${{ '$' }}{{ '{' }}years{{ '}' }} year${{ '$' }}{{ '{' }}years === 1 ? '' : 's'{{ '}' }} ago`;
+  {{ '}' }}
+{{ '}' }}</code></pre>
+  </app-code-snippet>
+
+  <!-- ============================================================ -->
+  <!-- Section: Accessibility                                        -->
+  <!-- ============================================================ -->
+  <h2 class="h3 mt-5 mb-2">Accessibility</h2>
+  <p class="text-secondary mb-4">
+    Screen readers are first-class users of this site. Every interactive
+    control has an accessible name, every landmark is in place, and ARIA is
+    used where semantic HTML alone isn't enough — not as a substitute for it.
+  </p>
+
+  <app-code-snippet label="skip link + landmarks">
+    <h3 class="h5">Skip link + landmark structure</h3>
+    <p class="text-secondary">
+      A visually hidden skip link is the first focusable element on every
+      page — keyboard and screen reader users can bypass the nav and jump
+      straight to content. The page shell uses semantic landmarks
+      (<code>&lt;nav&gt;</code>, <code>&lt;main&gt;</code>,
+      <code>&lt;footer&gt;</code>) so screen reader users can jump between
+      regions without navigating every link. The nav carries
+      <code>aria-label="Primary"</code> to distinguish it if a second nav
+      ever appears.
+    </p>
+<pre class="code-snippet"><code>&lt;!-- app.html --&gt;
+&lt;a class="visually-hidden-focusable" href="#main-content"&gt;Skip to main content&lt;/a&gt;
+
+&lt;app-navbar /&gt;
+
+&lt;main id="main-content"&gt;
+  &lt;router-outlet /&gt;
+&lt;/main&gt;
+
+&lt;app-footer /&gt;
+
+&lt;!-- navbar.html --&gt;
+&lt;nav aria-label="Primary" class="navbar navbar-expand-lg"&gt;
+  &hellip;
+&lt;/nav&gt;</code></pre>
+  </app-code-snippet>
+
+  <app-code-snippet label="icon-only buttons">
+    <h3 class="h5">Icon-only controls — <code>aria-label</code> + <code>aria-hidden</code> on the SVG</h3>
+    <p class="text-secondary">
+      Any button or link whose visible content is only an SVG needs an
+      <code>aria-label</code> on the control itself. The SVG inside gets
+      <code>aria-hidden="true"</code> so screen readers don't announce it
+      separately — without that, VoiceOver reads the raw path data.
+      Per-row actions carry the row identifier in their label so a screen
+      reader user hears "Delete Ruby on Rails", not an ambiguous "Delete".
+    </p>
+<pre class="code-snippet"><code>&lt;!-- Theme toggle — icon-only, labeled on the button --&gt;
+&lt;button
+  type="button"
+  [attr.aria-label]="'Switch to ' + (isDark() ? 'light' : 'dark') + ' mode'"
+&gt;
+  &lt;svg aria-hidden="true"&gt;&hellip;&lt;/svg&gt;
+&lt;/button&gt;
+
+&lt;!-- Per-row admin action — row identifier in the label --&gt;
+&lt;button
+  type="button"
+  [attr.aria-label]="'Delete ' + technology.name"
+&gt;Delete&lt;/button&gt;</code></pre>
+  </app-code-snippet>
+
+  <app-code-snippet label="table accessibility">
+    <h3 class="h5">Table accessibility — caption, <code>scope</code>, labeled row actions</h3>
+    <p class="text-secondary">
+      Every data table has either a visible <code>&lt;caption&gt;</code> or a
+      <code>visually-hidden</code> one — never just <code>aria-label</code>
+      on the <code>&lt;table&gt;</code> element, because that bypasses the
+      caption slot screen readers announce before reading headers. Column
+      headers carry <code>scope="col"</code>; row headers carry
+      <code>scope="row"</code>. This gives screen readers the full header
+      association for every cell without a complex ARIA grid.
+    </p>
+<pre class="code-snippet"><code>&lt;table class="table align-middle"&gt;
+  &lt;caption class="visually-hidden"&gt;All technologies available for projects.&lt;/caption&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th scope="col"&gt;Name&lt;/th&gt;
+      &lt;th scope="col"&gt;Category&lt;/th&gt;
+      &lt;th scope="col" class="text-end"&gt;Actions&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;th scope="row" class="fw-normal"&gt;{{ '{' }}{{ '{' }} technology.name {{ '}' }}{{ '}' }}&lt;/th&gt;
+      &lt;td&gt;{{ '{' }}{{ '{' }} technology.category {{ '}' }}{{ '}' }}&lt;/td&gt;
+      &lt;td class="text-end"&gt;
+        &lt;button [attr.aria-label]="'Edit ' + technology.name"&gt;Edit&lt;/button&gt;
+        &lt;button [attr.aria-label]="'Delete ' + technology.name"&gt;Delete&lt;/button&gt;
+      &lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;</code></pre>
+  </app-code-snippet>
+
+  <app-code-snippet label="expand button pattern">
+    <h3 class="h5">Expand/collapse — <code>aria-expanded</code> + <code>aria-controls</code></h3>
+    <p class="text-secondary">
+      The code snippet toggle buttons on this very page demonstrate the
+      disclosure pattern. <code>aria-expanded</code> reflects current state
+      so screen readers announce "collapsed" or "expanded" without any visual
+      cue. <code>aria-controls</code> points to the panel ID so assistive
+      technology can navigate directly to the revealed content.
+      <code>aria-label</code> on the button incorporates the snippet name so
+      repeated "Show code" buttons are distinguishable in a landmarks list.
+    </p>
+<pre class="code-snippet"><code>&lt;button
+  type="button"
+  [attr.aria-expanded]="expanded()"
+  [attr.aria-controls]="bodyId"
+  [attr.aria-label]="(expanded() ? 'Hide code for ' : 'Show code for ') + label()"
+  (click)="toggle()"
+&gt;
+  {{ '{' }}{{ '{' }} expanded() ? '&lt;code&gt;' : '&lt;code/&gt;' {{ '}' }}{{ '}' }}
+&lt;/button&gt;
+
+&#64;if (expanded()) {{ '{' }}
+  &lt;div [id]="bodyId"&gt;
+    &lt;ng-content select="pre" /&gt;
+  &lt;/div&gt;
+{{ '}' }}</code></pre>
+  </app-code-snippet>
+
+  <app-code-snippet label="dialog / lightbox">
+    <h3 class="h5">Dialog / lightbox — <code>role</code>, <code>aria-modal</code>, keyboard dismiss</h3>
+    <p class="text-secondary">
+      The photo lightbox uses <code>role="dialog"</code> and
+      <code>aria-modal="true"</code> so screen readers know content behind
+      it is inert. <code>aria-label</code> is derived from the image's own
+      alt text — no separate label needed. <code>tabindex="0"</code> makes
+      the overlay focusable so <code>(keydown.escape)</code> fires reliably
+      from keyboard. Clicking the image itself calls
+      <code>stopPropagation()</code> so users inspecting the photo don't
+      accidentally close it.
+    </p>
+<pre class="code-snippet"><code>&#64;if (lightboxSrc()) {{ '{' }}
+  &lt;div
+    class="lightbox-overlay"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="'Photo: ' + lightboxAlt()"
+    (click)="closeLightbox()"
+    (keydown.escape)="closeLightbox()"
+    tabindex="0"
+  &gt;
+    &lt;button type="button" aria-label="Close photo" (click)="closeLightbox()"&gt;
+      &lt;svg aria-hidden="true"&gt;&hellip;&lt;/svg&gt;
+    &lt;/button&gt;
+    &lt;img [src]="lightboxSrc()" [alt]="lightboxAlt()"
+         (click)="$event.stopPropagation()" /&gt;
+  &lt;/div&gt;
+{{ '}' }}</code></pre>
   </app-code-snippet>
 
   <!-- ============================================================ -->
@@ -436,21 +686,23 @@ result[:ok] \
   <h2 class="h3 mt-5 mb-2">Frontend Patterns</h2>
   <p class="text-secondary mb-4">
     Signals for state, <code>afterNextRender</code> for browser-only setup,
-    CSS custom properties for theming so we don't need a single style recalc
-    in JS to swap modes.
+    CSS custom properties for theming so not a single style recalc in JS is
+    needed to swap modes.
   </p>
 
   <app-code-snippet label="ThemeService effect">
-    <h3 class="h5">ThemeService — one effect syncs three things</h3>
+    <h3 class="h5">ThemeService — one <code>effect()</code> syncs three things</h3>
     <p class="text-secondary">
       <code>signal()</code> for state, <code>effect()</code> for side-effects.
-      Every theme change updates my own custom-property class, Bootstrap's
+      Every theme change updates the custom-property class, Bootstrap's
       <code>data-bs-theme</code> attribute, and <code>localStorage</code> in
-      one pass. SSR-safe via <code>isPlatformBrowser</code>.
+      one pass. SSR-safe via <code>isPlatformBrowser</code> — the
+      <code>localStorage</code> write is guarded, the class and attribute
+      changes are not (they're DOM operations that SSR renders as HTML).
     </p>
 <pre class="code-snippet"><code>constructor() {{ '{' }}
-  effect(() =&gt; {{ '{' }}
-    const t = this._theme();
+  effect(() => {{ '{' }}
+    const t    = this._theme();
     const root = this.doc.documentElement;
     root.classList.remove('theme-light', 'theme-dark');
     root.classList.add(`theme-${{ '$' }}{{ '{' }}t{{ '}' }}`);
@@ -465,62 +717,42 @@ result[:ok] \
   <app-code-snippet label="theme tokens">
     <h3 class="h5">Theme tokens — CSS custom properties, not Sass variables</h3>
     <p class="text-secondary">
-      Sass variables resolve at build time and don't react to a class change.
-      CSS custom properties resolve at runtime. Switching one class on
-      <code>&lt;html&gt;</code> recolors every component without a single
-      runtime style recalc in JS.
+      Sass variables resolve at build time. CSS custom properties resolve at
+      runtime. Switching one class on <code>&lt;html&gt;</code> recolors
+      every component without touching JavaScript. No re-render, no style
+      recalculation triggered by code — the browser handles it natively.
     </p>
 <pre class="code-snippet"><code>// styles.scss
 :root, .theme-light {{ '{' }}
-  --bg:          #ffffff;
-  --bg-surface:  #e9ecef;
-  --fg:          #111111;
-  --accent:      #4b9cd3;
+  --bg:         #ffffff;
+  --bg-surface: #e9ecef;
+  --fg:         #111111;
+  --accent:     #4b9cd3;
 {{ '}' }}
 
 .theme-dark {{ '{' }}
-  --bg:          #18181b;
-  --bg-surface:  #27272a;
-  --fg:          #fafafa;
-  --accent:      #4b9cd3;
+  --bg:         #18181b;
+  --bg-surface: #27272a;
+  --fg:         #fafafa;
+  --accent:     #4b9cd3;
 {{ '}' }}
 
-// any component
+// any component — zero JS involvement at toggle time
 .card {{ '{' }} background: var(--bg-surface); color: var(--fg); {{ '}' }}</code></pre>
   </app-code-snippet>
 
-  <app-code-snippet label="PageHero signal inputs">
-    <h3 class="h5">PageHero — signal inputs with a default</h3>
-    <p class="text-secondary">
-      Modern Angular signal-based inputs.
-      <code>input.required&lt;string&gt;()</code> for the unavoidable ones,
-      <code>input&lt;string&gt;('default')</code> for the overridable ones.
-      Same component renders the hero on Projects, Code, FAQ, Community, and
-      Contact — five lines of HTML to swap an image per page.
-    </p>
-<pre class="code-snippet"><code>// shared/components/page-hero/page-hero.ts
-export class PageHeroComponent {{ '{' }}
-  title = input.required&lt;string&gt;();
-  subtitle = input&lt;string&gt;('');
-  image = input&lt;string&gt;('sub-hero.jpg');
-{{ '}' }}
-
-// usage
-&lt;app-page-hero
-  title="Projects"
-  subtitle="Things I've built."
-  image="projects-hero.jpg" /&gt;</code></pre>
-  </app-code-snippet>
-
   <app-code-snippet label="ParallaxDirective">
-    <h3 class="h5">ParallaxDirective — afterNextRender, signal inputs, reduced-motion</h3>
+    <h3 class="h5">ParallaxDirective — <code>afterNextRender</code>, reduced-motion, rAF throttle</h3>
     <p class="text-secondary">
-      Browser-only setup without an <code>isPlatformBrowser</code> guard:
-      <code>afterNextRender</code> only runs in the browser, so the scroll
-      listener never registers during SSR. Signal <code>input()</code> with
-      an alias keeps the public attribute terse, rAF throttling caps work at
-      one update per frame, and the whole effect opts out under
-      <code>prefers-reduced-motion: reduce</code>.
+      Three things in one directive.
+      <code>afterNextRender</code> replaces the
+      <code>isPlatformBrowser</code> guard — it only runs in the browser,
+      so the scroll listener never registers during SSR.
+      <code>prefers-reduced-motion: reduce</code> exits early before adding
+      any listener at all — the directive respects the OS accessibility
+      preference without a separate flag.
+      <code>requestAnimationFrame</code> with a <code>ticking</code> guard
+      caps work to one update per frame regardless of scroll event rate.
     </p>
 <pre class="code-snippet"><code>// shared/directives/parallax.directive.ts
 @Directive({{ '{' }} selector: '[appParallax]', standalone: true {{ '}' }})
@@ -528,14 +760,13 @@ export class ParallaxDirective {{ '{' }}
   readonly factor = input(0.3, {{ '{' }} alias: 'appParallax' {{ '}' }});
 
   constructor() {{ '{' }}
-    afterNextRender(() =&gt; {{ '{' }}
+    afterNextRender(() => {{ '{' }}
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
       let ticking = false;
-      const update = () =&gt; {{ '{' }}
-        // translate3d clamped to ±factor * viewportH (no overflow past section)
-        ticking = false;
-      {{ '}' }};
-      window.addEventListener('scroll', () =&gt; {{ '{' }}
+      const update = () => {{ '{' }} ticking = false; /* apply translate3d */ {{ '}' }};
+
+      window.addEventListener('scroll', () => {{ '{' }}
         if (!ticking) {{ '{' }} ticking = true; requestAnimationFrame(update); {{ '}' }}
       {{ '}' }}, {{ '{' }} passive: true {{ '}' }});
     {{ '}' }});
@@ -543,89 +774,48 @@ export class ParallaxDirective {{ '{' }}
 {{ '}' }}</code></pre>
   </app-code-snippet>
 
-  <!-- ============================================================ -->
-  <!-- Section: Domain Models                                        -->
-  <!-- ============================================================ -->
-  <h2 class="h3 mt-5 mb-2">Domain Models</h2>
-  <p class="text-secondary mb-4">
-    AR models lean on Rails built-ins (<code>normalizes</code>, validations)
-    instead of bespoke callbacks. Frontend models graduate from interfaces
-    to real classes when they need to carry behavior.
-  </p>
-
-  <app-code-snippet label="ActiveRecord normalizes">
-    <h3 class="h5">ActiveRecord <code>normalizes:</code> (Rails 7.1+)</h3>
+  <app-code-snippet label="signal-driven lightbox">
+    <h3 class="h5">Lightbox — <code>signal&lt;string | null&gt;</code> with no modal library</h3>
     <p class="text-secondary">
-      Built-in attribute normalization. No <code>before_validation</code>
-      callback, no custom setter, no "is the email lower-cased on this read or
-      that one" inconsistency.
+      A <code>signal&lt;string | null&gt;</code> is the entire state machine.
+      <code>null</code> means closed; a URL means open — no boolean flag, no
+      separate alt signal needed at the call site. The overlay renders with
+      <code>&#64;if</code> so it's absent from the DOM entirely when closed, not
+      just hidden. Clicking the backdrop closes; clicking the image calls
+      <code>stopPropagation()</code> so it doesn't. The <code>tabindex="0"</code>
+      and <code>(keydown.escape)</code> binding make it keyboard-dismissible
+      without a focus-trap library.
     </p>
-<pre class="code-snippet"><code># app/models/contact_message.rb
-class ContactMessage &lt; ApplicationRecord
-  normalizes :name, :message, with: -&gt;(v) {{ '{' }} v.strip {{ '}' }}
-  normalizes :email,           with: -&gt;(v) {{ '{' }} v.strip.downcase {{ '}' }}
+<pre class="code-snippet"><code>// about.ts
+protected lightboxSrc = signal&lt;string | null&gt;(null);
+protected lightboxAlt = signal&lt;string&gt;('');
 
-  validates :name, :message, presence: true
-  validates :email, presence: true,
-                    format: {{ '{' }} with: URI::MailTo::EMAIL_REGEXP {{ '}' }}
-end</code></pre>
-  </app-code-snippet>
-
-  <app-code-snippet label="Project model class">
-    <h3 class="h5">Project — from interface to class with a <code>time_ago</code> field</h3>
-    <p class="text-secondary">
-      The frontend's <code>Project</code> graduated from a structural
-      <code>interface</code> to a real class so it can carry behavior.
-      <code>ProjectData</code> still describes the raw API shape; the class
-      wraps it, exposes user-set <code>project_start</code> /
-      <code>project_end</code> dates from the backend, and computes
-      <code>time_ago</code> once in the constructor against
-      <code>project_end</code>. Everything is <code>readonly</code> — the
-      value is deterministic at construction, so a stored field is cheaper
-      than a getter and reads the same in templates:
-      <code>{{ '{' }}{{ '{' }} project.time_ago {{ '}' }}{{ '}' }}</code>.
-      The <code>ProjectsService</code> maps every API response through
-      <code>new Project(p)</code> so consumers always receive real instances.
-    </p>
-<pre class="code-snippet"><code>// core/models/project.model.ts
-export interface ProjectData {{ '{' }}
-  id: number;
-  title: string;
-  // …
-  project_start: string | null;   // 'YYYY-MM-DD' from the API
-  project_end:   string | null;
+protected openLightbox(src: string, alt: string): void {{ '{' }}
+  this.lightboxSrc.set(src);
+  this.lightboxAlt.set(alt);
 {{ '}' }}
 
-export class Project {{ '{' }}
-  readonly id: number;
-  readonly title: string;
-  // …
-  readonly project_start: string | null;
-  readonly project_end: string | null;
-  readonly time_ago: string;
+protected closeLightbox(): void {{ '{' }}
+  this.lightboxSrc.set(null);
+{{ '}' }}
 
-  constructor(data: ProjectData, now: Date = new Date()) {{ '{' }}
-    this.id = data.id;
-    this.title = data.title;
-    // …copy the rest…
-    this.project_start = data.project_start;
-    this.project_end   = data.project_end;
-    this.time_ago = Project.computeTimeAgo(now, data.project_end);
-  {{ '}' }}
+// about.html — trigger on any image
+&lt;div class="photo-thumb" (click)="openLightbox('/profile.png', 'Zach Young')"&gt;
+  &lt;img src="/profile.png" alt="Zach Young" class="profile-photo" /&gt;
+  &lt;span class="photo-expand-icon" aria-hidden="true"&gt;&lt;!-- expand SVG --&gt;&lt;/span&gt;
+&lt;/div&gt;
 
-  private static computeTimeAgo(now: Date, project_end: string | null): string {{ '{' }}
-    if (!project_end) return '';
-    const days = Math.floor((now.getTime() - new Date(project_end).getTime()) / 86_400_000);
-    if (days &lt; 1) return 'today';
-    if (days &lt; 7) return days + ' day' + (days === 1 ? '' : 's') + ' ago';
-    // …walks days → weeks → months → years and picks the right unit
-  {{ '}' }}
+// overlay — absent from DOM when closed, not just hidden
+&#64;if (lightboxSrc()) {{ '{' }}
+  &lt;div class="lightbox-overlay"
+       role="dialog" aria-modal="true"
+       (click)="closeLightbox()"
+       (keydown.escape)="closeLightbox()"
+       tabindex="0"&gt;
+    &lt;img [src]="lightboxSrc()" [alt]="lightboxAlt()"
+         (click)="$event.stopPropagation()" /&gt;
+  &lt;/div&gt;
 {{ '}' }}</code></pre>
   </app-code-snippet>
 
-  <p class="text-secondary mt-5 mb-0">
-    More to come. If you spot something in the source you'd like a closer look
-    at, the whole thing is on
-    <a href="https://github.com/" target="_blank" rel="noopener">GitHub</a>.
-  </p>
 </section>

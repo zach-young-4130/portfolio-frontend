@@ -9,11 +9,19 @@
   <!-- ── Bio ───────────────────────────────────────────────────────────────── -->
   <div class="row g-5 align-items-start mb-5">
     <div class="col-lg-4 col-md-5 text-center text-md-start">
-      <img
-        src="/profile.png"
-        alt="Zach Young"
-        class="profile-photo"
-      />
+      <div class="photo-thumb" (click)="openLightbox('/profile.png', 'Zach Young')">
+        <img
+          src="/profile.png"
+          alt="Zach Young"
+          class="profile-photo"
+        />
+        <span class="photo-expand-icon" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>
+            <line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
+          </svg>
+        </span>
+      </div>
       <div class="profile-meta mt-4">
         <p class="about-label">Based in</p>
         <p class="mb-3">Cape Girardeau, Missouri</p>
@@ -51,12 +59,16 @@
     <h2 class="h4 mb-4">Core stack</h2>
     <div class="d-flex flex-wrap gap-2">
       <span class="chip">Ruby on Rails</span>
+      <span class="chip">Hotwire</span>
+      <span class="chip">Turbo</span>
+      <span class="chip">Stimulus</span>
       <span class="chip">Angular</span>
+      <span class="chip">JavaScript</span>
       <span class="chip">TypeScript</span>
       <span class="chip">PostgreSQL</span>
       <span class="chip">Node.js</span>
-      <span class="chip">Hotwire</span>
       <span class="chip">REST APIs</span>
+      <span class="chip">Tailwind CSS</span>
       <span class="chip">Bootstrap</span>
     </div>
   </div>
@@ -80,6 +92,19 @@
         </p>
       </div>
       <div class="col-lg-4">
+        <div class="photo-thumb mb-3" (click)="openLightbox('/about-podium.jpg', 'Zach Young on the podium at the 2015 ITU World Triathlon Championship in Edmonton, Canada, finishing 3rd representing the USA')">
+          <img
+            src="/about-podium.jpg"
+            alt="Zach Young on the podium at the 2015 ITU World Triathlon Championship in Edmonton, Canada, finishing 3rd representing the USA"
+            class="podium-photo"
+          />
+          <span class="photo-expand-icon" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>
+              <line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
+            </svg>
+          </span>
+        </div>
         <div class="achievement-card">
           <ul class="achievement-list" aria-label="Athletic highlights">
             <li>
@@ -144,3 +169,31 @@
   </div>
 
 </section>
+
+@if (lightboxSrc()) {
+  <div
+    class="lightbox-overlay"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="'Photo: ' + lightboxAlt()"
+    (click)="closeLightbox()"
+    (keydown.escape)="closeLightbox()"
+    tabindex="0"
+  >
+    <button
+      type="button"
+      class="lightbox-close"
+      aria-label="Close photo"
+      (click)="closeLightbox()"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <img
+      [src]="lightboxSrc()"
+      [alt]="lightboxAlt()"
+      (click)="$event.stopPropagation()"
+    />
+  </div>
+}
