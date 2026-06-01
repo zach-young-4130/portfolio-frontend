@@ -36,4 +36,9 @@ export const ADMIN_ROUTES: Routes = [
     loadComponent: () => import('./tags/admin-tags').then((m) => m.AdminTagsComponent),
     title: 'Admin · Tags',
   },
+  {
+    path: 'analytics',
+    loadComponent: () => import('./analytics/admin-analytics').then((m) => m.AdminAnalyticsComponent),
+    title: 'Admin · Analytics',
+  },
 ];

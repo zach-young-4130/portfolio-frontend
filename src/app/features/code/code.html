@@ -403,6 +403,60 @@ def load_project(id)
 end</code></pre>
   </app-code-snippet>
 
+  <app-code-snippet label="weighted full-text search">
+    <h3 class="h5">Weighted full-text search — PostgreSQL <code>setweight</code> + <code>plainto_tsquery</code></h3>
+    <p class="text-secondary">
+      The projects page runs a full-text search across four fields with
+      explicit PostgreSQL weights: title and tagline rank highest (A), tech
+      stack second (B), description third (C). A GIN index on the computed
+      <code>tsvector</code> expression means the database never scans rows —
+      it resolves the matching IDs from the index, then fetches and eager-loads
+      associations for only those records. The search composes cleanly with the
+      existing <code>includes</code> — no extra query path, no N+1 risk on
+      filtered results. The frontend debounces input 300ms and uses
+      <code>switchMap</code> to cancel in-flight requests when the user keeps
+      typing.
+    </p>
+<pre class="code-snippet"><code># app/models/project.rb
+scope :search, ->(query) {{ '{' }}
+  return all if query.blank?
+  where(
+    <<~SQL,
+      (
+        setweight(to_tsvector('english', coalesce(title, '')),      'A') ||
+        setweight(to_tsvector('english', coalesce(tagline, '')),     'A') ||
+        setweight(to_tsvector('english', coalesce(tech_stack, '')),  'B') ||
+        setweight(to_tsvector('english', coalesce(description, '')), 'C')
+      ) @@ plainto_tsquery('english', ?)
+    SQL
+    query
+  )
+{{ '}' }}
+
+# GIN index so the DB resolves matches from the index, not a full table scan
+CREATE INDEX index_projects_on_fts ON projects USING gin ((
+  setweight(to_tsvector('english', coalesce(title, '')),     'A') ||
+  setweight(to_tsvector('english', coalesce(tech_stack, '')), 'B') ||
+  setweight(to_tsvector('english', coalesce(description, '')), 'C')
+));
+
+# app/controllers/api/v1/projects_controller.rb
+def index
+  scope = visible_scope_for(Project).includes(:technologies, :tags)
+  scope = scope.search(params[:q]) if params[:q].present?
+  render_success(projects: ProjectBlueprint.render_as_hash(scope))
+end
+
+// projects-list.ts — debounce + switchMap cancels stale requests
+toObservable(this.query).pipe(
+  debounceTime(300),
+  distinctUntilChanged(),
+  tap(() =&gt; this.loading.set(true)),
+  switchMap((q) =&gt; this.projectsService.list(q ? {{ '{' }} q {{ '}' }} : undefined)),
+  takeUntilDestroyed(this.destroyRef),
+).subscribe(...);</code></pre>
+  </app-code-snippet>
+
   <!-- ============================================================ -->
   <!-- Section: Data Modeling                                        -->
   <!-- ============================================================ -->
@@ -480,6 +534,13 @@ end</code></pre>
       <code>new Project(p)</code> so consumers always receive instances, never
       plain objects.
     </p>
+    <p class="text-secondary">
+      <em>Note:</em> Rails exposes computed attributes natively on the backend.
+      This pattern is intentional on the frontend — it demonstrates how
+      TypeScript class models can carry domain behavior and derived state at
+      the boundary between the API and the UI, keeping that logic out of
+      components and templates entirely.
+    </p>
 <pre class="code-snippet"><code>// core/models/project.model.ts
 export interface ProjectData {{ '{' }}
   id: number; title: string;
@@ -529,6 +590,9 @@ export class Project {{ '{' }}
   <!-- ============================================================ -->
   <h2 class="h3 mt-5 mb-2">Accessibility</h2>
   <p class="text-secondary mb-4">
+    Accessibility is personal to me. I use a wheelchair, and both of my
+    maternal grandparents were blind. I have a lived understanding of what it
+    means to rely on assistive technology — and that shapes how I build.
     Screen readers are first-class users of this site. Every interactive
     control has an accessible name, every landmark is in place, and ARIA is
     used where semantic HTML alone isn't enough — not as a substitute for it.
@@ -677,6 +741,115 @@ export class Project {{ '{' }}
     &lt;img [src]="lightboxSrc()" [alt]="lightboxAlt()"
          (click)="$event.stopPropagation()" /&gt;
   &lt;/div&gt;
+{{ '}' }}</code></pre>
+  </app-code-snippet>
+
+  <!-- ============================================================ -->
+  <!-- Section: SEO                                                  -->
+  <!-- ============================================================ -->
+  <h2 class="h3 mt-5 mb-2">SEO</h2>
+  <p class="text-secondary mb-4">
+    Most companies and founders care deeply about search visibility. Every
+    page on this site sets its own title, description, Open Graph, and
+    Twitter Card tags server-side — crawlers see the complete metadata before
+    JavaScript runs. JSON-LD structured data on the home page gives search
+    engines a machine-readable identity card for the site.
+  </p>
+
+  <app-code-snippet label="SeoService">
+    <h3 class="h5">SeoService — one call per page, server-side rendered</h3>
+    <p class="text-secondary">
+      Angular SSR runs the component constructor on the server, so
+      <code>Title.setTitle()</code> and <code>Meta.updateTag()</code> fire
+      before the HTML response leaves the server. Crawlers and social
+      previewers receive fully populated meta tags without executing
+      JavaScript. The service also writes a <code>&lt;link rel="canonical"&gt;</code>
+      using the current router URL so duplicate-content signals are never
+      sent to search engines.
+    </p>
+<pre class="code-snippet"><code>// core/services/seo.service.ts
+&#64;Injectable({{ '{' }} providedIn: 'root' {{ '}' }})
+export class SeoService {{ '{' }}
+  private titleService = inject(Title);
+  private meta         = inject(Meta);
+  private router       = inject(Router);
+  private doc          = inject(DOCUMENT);
+
+  set(config: {{ '{' }} title: string; description: string; image?: string; jsonLd?: object {{ '}' }}): void {{ '{' }}
+    const fullTitle = `${{ '$' }}{{ '{' }}config.title{{ '}' }} | Zach Young`;
+    const url       = `https://zachyoung.com${{ '$' }}{{ '{' }}this.router.url.split('?')[0]{{ '}' }}`;
+
+    this.titleService.setTitle(fullTitle);
+
+    // Core — crawlers read these
+    this.meta.updateTag({{ '{' }} name: 'description',        content: config.description {{ '}' }});
+
+    // Open Graph — LinkedIn, Slack, iMessage previews
+    this.meta.updateTag({{ '{' }} property: 'og:title',       content: fullTitle {{ '}' }});
+    this.meta.updateTag({{ '{' }} property: 'og:description',  content: config.description {{ '}' }});
+    this.meta.updateTag({{ '{' }} property: 'og:url',          content: url {{ '}' }});
+    this.meta.updateTag({{ '{' }} property: 'og:image',        content: config.image ?? DEFAULT_IMAGE {{ '}' }});
+
+    // Twitter Card — X / Twitter link previews
+    this.meta.updateTag({{ '{' }} name: 'twitter:title',       content: fullTitle {{ '}' }});
+    this.meta.updateTag({{ '{' }} name: 'twitter:description', content: config.description {{ '}' }});
+
+    this.setCanonical(url);
+    config.jsonLd ? this.setJsonLd(config.jsonLd) : this.clearJsonLd();
+  {{ '}' }}
+{{ '}' }}
+
+// Every public page component — called in the constructor so SSR captures it
+export class ProjectsListComponent {{ '{' }}
+  constructor() {{ '{' }}
+    inject(SeoService).set({{ '{' }}
+      title:       'Projects',
+      description: 'Progressive web applications built with Ruby on Rails and Angular.',
+    {{ '}' }});
+  {{ '}' }}
+{{ '}' }}</code></pre>
+  </app-code-snippet>
+
+  <app-code-snippet label="JSON-LD structured data">
+    <h3 class="h5">JSON-LD — machine-readable identity for search engines</h3>
+    <p class="text-secondary">
+      The home page injects a <code>schema.org/Person</code> block into the
+      document <code>&lt;head&gt;</code> at SSR time. Google, Bing, and AI
+      overview engines parse this to understand who the site belongs to, what
+      they do, and where they are — independently of the visible page content.
+      The service manages the script tag lifecycle: it creates it on first
+      call, updates it on subsequent calls, and removes it when navigating to
+      a page that doesn't need structured data.
+    </p>
+<pre class="code-snippet"><code>// Injected via SeoService.set({{ '{' }} jsonLd: {{ '{' }} ... {{ '}' }} {{ '}' }}) in HomeComponent
+{{ '{' }}
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Zach Young",
+  "jobTitle": "Senior Full-Stack Software Engineer",
+  "url": "https://zachyoung.com",
+  "image": "https://zachyoung.com/profile.png",
+  "address": {{ '{' }}
+    "@type": "PostalAddress",
+    "addressLocality": "Cape Girardeau",
+    "addressRegion": "MO",
+    "addressCountry": "US"
+  {{ '}' }},
+  "knowsAbout": ["Ruby on Rails", "Angular", "TypeScript", "Hotwire", "PostgreSQL"],
+  "award": ["2× National Champion — Paratriathlon", "3rd — ITU World Championship"]
+{{ '}' }}
+
+// SeoService writes and manages the script tag
+private setJsonLd(data: object): void {{ '{' }}
+  const id = 'json-ld-schema';
+  let script = this.doc.getElementById(id) as HTMLScriptElement | null;
+  if (!script) {{ '{' }}
+    script = this.doc.createElement('script');
+    script.id   = id;
+    script.type = 'application/ld+json';
+    this.doc.head.appendChild(script);
+  {{ '}' }}
+  script.text = JSON.stringify(data);
 {{ '}' }}</code></pre>
   </app-code-snippet>
 

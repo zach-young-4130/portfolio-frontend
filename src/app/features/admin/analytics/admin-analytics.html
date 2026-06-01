@@ -1,0 +1,117 @@
+<section class="container py-5">
+  <h1 class="h2 mb-4">Visitor Analytics <span class="text-muted fw-normal fs-6">last 30 days</span></h1>
+
+  @if (loading()) {
+    <p role="status" class="text-center">Loading&hellip;</p>
+  } @else if (stats(); as s) {
+
+    <!-- ── Total ──────────────────────────────────────────────────────────── -->
+    <div class="row g-3 mb-5">
+      <div class="col-md-3">
+        <div class="stat-card text-center p-4">
+          <div class="stat-value">{{ s.total }}</div>
+          <div class="stat-label">Human Visits</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card text-center p-4">
+          <div class="stat-value">{{ entries(s.by_country).length }}</div>
+          <div class="stat-label">Countries</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card text-center p-4">
+          <div class="stat-value">{{ entries(s.by_city).length }}</div>
+          <div class="stat-label">Cities</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+      <!-- ── By Country ──────────────────────────────────────────────────── -->
+      <div class="col-md-6">
+        <h2 class="h5 mb-3">Top Countries</h2>
+        @if (entries(s.by_country).length === 0) {
+          <p class="text-muted">No data yet.</p>
+        } @else {
+          <table class="table table-sm align-middle" aria-label="Visits by country">
+            <caption class="visually-hidden">Top countries by visit count, last 30 days.</caption>
+            <thead>
+              <tr>
+                <th scope="col">Country</th>
+                <th scope="col" class="text-end">Visits</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (entry of entries(s.by_country); track entry[0]) {
+                <tr>
+                  <td>{{ entry[0] }}</td>
+                  <td class="text-end">{{ entry[1] }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+
+      <!-- ── By City ────────────────────────────────────────────────────── -->
+      <div class="col-md-6">
+        <h2 class="h5 mb-3">Top Cities</h2>
+        @if (entries(s.by_city).length === 0) {
+          <p class="text-muted">No data yet.</p>
+        } @else {
+          <table class="table table-sm align-middle" aria-label="Visits by city">
+            <caption class="visually-hidden">Top cities by visit count, last 30 days.</caption>
+            <thead>
+              <tr>
+                <th scope="col">City</th>
+                <th scope="col" class="text-end">Visits</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (entry of entries(s.by_city); track entry[0]) {
+                <tr>
+                  <td>{{ entry[0] }}</td>
+                  <td class="text-end">{{ entry[1] }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    </div>
+
+    <!-- ── Recent Visits ──────────────────────────────────────────────────── -->
+    <h2 class="h5 mb-3">Recent Visits</h2>
+    @if (s.recent.length === 0) {
+      <p class="text-muted">No visits recorded yet.</p>
+    } @else {
+      <div class="table-responsive">
+        <table class="table table-sm align-middle" aria-label="Recent visits">
+          <caption class="visually-hidden">Most recent 25 human visits.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Page</th>
+              <th scope="col">City</th>
+              <th scope="col">Country</th>
+              <th scope="col">When</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (v of s.recent; track v.id) {
+              <tr>
+                <td class="font-monospace small">{{ v.path }}</td>
+                <td>{{ v.city ?? '—' }}</td>
+                <td>{{ v.country ?? '—' }}</td>
+                <td class="text-muted small">{{ v.created_at | date:'MMM d, y, h:mm a' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+  } @else {
+    <p class="text-muted text-center">No stats available.</p>
+  }
+</section>
