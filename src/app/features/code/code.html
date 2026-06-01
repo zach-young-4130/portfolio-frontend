@@ -404,40 +404,52 @@ end</code></pre>
   </app-code-snippet>
 
   <app-code-snippet label="weighted full-text search">
-    <h3 class="h5">Weighted full-text search — PostgreSQL <code>setweight</code> + <code>plainto_tsquery</code></h3>
+    <h3 class="h5">Weighted full-text search — <code>'simple'</code> config, <code>setweight</code>, prefix matching</h3>
     <p class="text-secondary">
-      The projects page runs a full-text search across four fields with
-      explicit PostgreSQL weights: title and tagline rank highest (A), tech
-      stack second (B), description third (C). A GIN index on the computed
-      <code>tsvector</code> expression means the database never scans rows —
-      it resolves the matching IDs from the index, then fetches and eager-loads
-      associations for only those records. The search composes cleanly with the
-      existing <code>includes</code> — no extra query path, no N+1 risk on
-      filtered results. The frontend debounces input 300ms and uses
-      <code>switchMap</code> to cancel in-flight requests when the user keeps
-      typing.
+      The projects page searches across four fields with explicit PostgreSQL
+      weights: title and tagline rank highest (A), tech stack second (B),
+      description third (C). Two deliberate config choices make it work for
+      real data. First, <code>'simple'</code> instead of <code>'english'</code>
+      — the English config removes stop words and applies stemming, which
+      silently drops acronyms like <em>IHM</em> into an empty tsquery that
+      matches everything. Simple skips that entirely. Second,
+      <code>to_tsquery</code> with a <code>:*</code> suffix on each term
+      enables prefix matching — typing <em>ang</em> finds Angular before the
+      word is complete. A GIN index on the computed expression means the
+      database resolves matches from the index, not a table scan, then
+      eager-loads associations for only the matched rows — no N+1 on filtered
+      results. The frontend debounces 300ms and uses <code>switchMap</code> to
+      cancel in-flight requests when the user keeps typing.
     </p>
 <pre class="code-snippet"><code># app/models/project.rb
 scope :search, ->(query) {{ '{' }}
   return all if query.blank?
+  # Strip tsquery special chars, append :* to each term for prefix matching.
+  # 'simple' config: no stemming, no stop word removal — acronyms survive intact.
+  safe_query = query.split
+    .map {{ '{' }} |w| w.gsub(/[^a-zA-Z0-9\-]/, "") {{ '}' }}
+    .reject(&amp;:empty?)
+    .map {{ '{' }} |w| "##{{ '{' }}w{{ '}' }}:*" {{ '}' }}
+    .join(" &amp; ")
+  return all if safe_query.blank?
   where(
     <<~SQL,
       (
-        setweight(to_tsvector('english', coalesce(title, '')),      'A') ||
-        setweight(to_tsvector('english', coalesce(tagline, '')),     'A') ||
-        setweight(to_tsvector('english', coalesce(tech_stack, '')),  'B') ||
-        setweight(to_tsvector('english', coalesce(description, '')), 'C')
-      ) @@ plainto_tsquery('english', ?)
+        setweight(to_tsvector('simple', coalesce(title, '')),      'A') ||
+        setweight(to_tsvector('simple', coalesce(tagline, '')),     'A') ||
+        setweight(to_tsvector('simple', coalesce(tech_stack, '')),  'B') ||
+        setweight(to_tsvector('simple', coalesce(description, '')), 'C')
+      ) @@ to_tsquery('simple', ?)
     SQL
-    query
+    safe_query
   )
 {{ '}' }}
 
-# GIN index so the DB resolves matches from the index, not a full table scan
+# GIN index — resolves matches from the index, not a full table scan
 CREATE INDEX index_projects_on_fts ON projects USING gin ((
-  setweight(to_tsvector('english', coalesce(title, '')),     'A') ||
-  setweight(to_tsvector('english', coalesce(tech_stack, '')), 'B') ||
-  setweight(to_tsvector('english', coalesce(description, '')), 'C')
+  setweight(to_tsvector('simple', coalesce(title, '')),      'A') ||
+  setweight(to_tsvector('simple', coalesce(tech_stack, '')), 'B') ||
+  setweight(to_tsvector('simple', coalesce(description, '')), 'C')
 ));
 
 # app/controllers/api/v1/projects_controller.rb
