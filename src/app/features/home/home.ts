@@ -12,6 +12,7 @@ import { RouterLink } from '@angular/router';
 import { NgbAccordionModule } from '@ng-bootstrap/ng-bootstrap';
 import { ProjectsService } from '../../core/services/projects.service';
 import { FaqService } from '../../core/services/faq.service';
+import { SeoService } from '../../core/services/seo.service';
 import { Project } from '../../core/models/project.model';
 import { FaqItem } from '../../core/models/faq-item.model';
 import { ProjectCardComponent } from '../../shared/components/project-card/project-card';
@@ -35,7 +36,32 @@ import { ParallaxDirective } from '../../shared/directives/parallax.directive';
 export class HomeComponent implements OnInit {
   private projectsService = inject(ProjectsService);
   private faqService = inject(FaqService);
+  private seoService = inject(SeoService);
   private destroyRef = inject(DestroyRef);
+
+  constructor() {
+    this.seoService.set({
+      title: 'Zach Young — Full-Stack Software Engineer',
+      description: 'Senior full-stack engineer with 10+ years shipping production applications across ag-tech, e-commerce, ed-tech, fin-tech, and AI. Specializing in Ruby on Rails and Angular.',
+      jsonLd: {
+        '@context': 'https://schema.org',
+        '@type': 'Person',
+        name: 'Zach Young',
+        jobTitle: 'Senior Full-Stack Software Engineer',
+        url: 'https://zachyoung.com',
+        image: 'https://zachyoung.com/profile.png',
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: 'Cape Girardeau',
+          addressRegion: 'MO',
+          addressCountry: 'US',
+        },
+        knowsAbout: ['Ruby on Rails', 'Angular', 'TypeScript', 'JavaScript', 'PostgreSQL', 'Hotwire', 'Turbo', 'Stimulus', 'Node.js'],
+        alumniOf: 'Southeast Missouri State University',
+        award: ['2× National Champion — Paratriathlon', '3rd Place — ITU World Championship, Edmonton, Canada'],
+      },
+    });
+  }
 
   protected projects = signal<Project[]>([]);
   protected faqItems = signal<FaqItem[]>([]);
