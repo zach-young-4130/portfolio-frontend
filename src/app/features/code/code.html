@@ -429,7 +429,7 @@ scope :search, ->(query) {{ '{' }}
   safe_query = query.split
     .map {{ '{' }} |w| w.gsub(/[^a-zA-Z0-9\-]/, "") {{ '}' }}
     .reject(&amp;:empty?)
-    .map {{ '{' }} |w| "##{{ '{' }}w{{ '}' }}:*" {{ '}' }}
+    .map {{ '{' }} |w| "#{{ '{' }}w{{ '}' }}:*" {{ '}' }}
     .join(" &amp; ")
   return all if safe_query.blank?
   where(
