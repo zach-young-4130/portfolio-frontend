@@ -1,0 +1,107 @@
+<section class="container py-5">
+  <header class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2 m-0">Manage Technologies</h1>
+    <button type="button" class="btn btn-primary" (click)="openNew()">New technology</button>
+  </header>
+
+  @if (technologies().length === 0) {
+    <p class="text-muted">No technologies yet.</p>
+  } @else {
+    <div class="table-responsive">
+      <table class="table align-middle" aria-label="Technologies">
+        <caption class="visually-hidden">All available technologies for tagging projects.</caption>
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Slug</th>
+            <th scope="col">Category</th>
+            <th scope="col" class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (tech of technologies(); track tech.id) {
+            <tr>
+              <th scope="row" class="fw-normal">{{ tech.name }}</th>
+              <td><code>{{ tech.slug }}</code></td>
+              <td>{{ tech.category ?? '—' }}</td>
+              <td class="text-end">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-secondary me-2"
+                  (click)="openEdit(tech)"
+                  [attr.aria-label]="'Edit ' + tech.name"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-danger"
+                  (click)="confirmDelete(tech)"
+                  [attr.aria-label]="'Delete ' + tech.name"
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
+
+<ng-template #editModal let-modal>
+  <div class="modal-header">
+    <h2 class="modal-title h5" id="tech-modal-title">
+      {{ editing() ? 'Edit technology' : 'New technology' }}
+    </h2>
+    <button
+      type="button"
+      class="btn-close"
+      aria-label="Close dialog"
+      (click)="modal.dismiss()"
+    ></button>
+  </div>
+  <form [formGroup]="form" (ngSubmit)="save(modal.close)" novalidate>
+    <div class="modal-body">
+      <div class="mb-3">
+        <label for="tech-name" class="form-label">Name</label>
+        <input id="tech-name" class="form-control" formControlName="name" />
+      </div>
+      <div class="mb-3">
+        <label for="tech-slug" class="form-label">Slug</label>
+        <input id="tech-slug" class="form-control" formControlName="slug" placeholder="e.g. ruby-on-rails" />
+        <div class="form-text">Lowercase letters, numbers, and hyphens only.</div>
+      </div>
+      <div class="mb-3">
+        <label for="tech-category" class="form-label">Category</label>
+        <select id="tech-category" class="form-select" formControlName="category">
+          <option value="">— none —</option>
+          @for (cat of categories; track cat) {
+            <option [value]="cat">{{ cat }}</option>
+          }
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="form.invalid">Save</button>
+    </div>
+  </form>
+</ng-template>
+
+<ng-template #deleteModal let-modal>
+  <div class="modal-header">
+    <h2 class="modal-title h5" id="delete-tech-modal-title">Delete technology</h2>
+    <button type="button" class="btn-close" aria-label="Close dialog" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <p class="m-0">
+      Delete &ldquo;{{ editing()?.name }}&rdquo;? This will remove it from all projects.
+    </p>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">Cancel</button>
+    <button type="button" class="btn btn-danger" (click)="modal.close(true)">Delete</button>
+  </div>
+</ng-template>

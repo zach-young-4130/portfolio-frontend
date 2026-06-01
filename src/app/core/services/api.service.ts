@@ -11,8 +11,8 @@ export class ApiService {
   private http = inject(HttpClient);
   private base = environment.apiBaseUrl;
 
-  get<T>(path: string): Observable<T> {
-    return this.http.get<T>(`${this.base}/${path}`).pipe(
+  get<T>(path: string, params?: Record<string, string>): Observable<T> {
+    return this.http.get<T>(`${this.base}/${path}`, params ? { params } : {}).pipe(
       timeout(REQUEST_TIMEOUT_MS),
       retry({ count: 2, delay: 1500 }),
     );

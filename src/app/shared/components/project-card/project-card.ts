@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, input, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Project } from '../../../core/models/project.model';
 
@@ -12,11 +12,4 @@ import { Project } from '../../../core/models/project.model';
 })
 export class ProjectCardComponent {
   project = input.required<Project>();
-
-  protected techList = computed(() =>
-    this.project()
-      .tech_stack.split(',')
-      .map((t) => t.trim())
-      .filter(Boolean),
-  );
 }

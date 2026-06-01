@@ -26,4 +26,14 @@ export const ADMIN_ROUTES: Routes = [
     loadComponent: () => import('./messages/admin-messages').then((m) => m.AdminMessagesComponent),
     title: 'Admin · Messages',
   },
+  {
+    path: 'technologies',
+    loadComponent: () => import('./technologies/admin-technologies').then((m) => m.AdminTechnologiesComponent),
+    title: 'Admin · Technologies',
+  },
+  {
+    path: 'tags',
+    loadComponent: () => import('./tags/admin-tags').then((m) => m.AdminTagsComponent),
+    title: 'Admin · Tags',
+  },
 ];

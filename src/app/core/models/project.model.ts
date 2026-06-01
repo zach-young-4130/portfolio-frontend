@@ -1,3 +1,6 @@
+import { Technology } from './technology.model';
+import { Tag } from './tag.model';
+
 export interface ProjectData {
   id: number;
   title: string;
@@ -12,6 +15,8 @@ export interface ProjectData {
   published: boolean;
   project_start: string | null;
   project_end: string | null;
+  technologies: Technology[];
+  tags: Tag[];
 }
 
 export class Project {
@@ -29,6 +34,8 @@ export class Project {
   readonly project_start: string | null;
   readonly project_end: string | null;
   readonly time_ago: string;
+  readonly technologies: Technology[];
+  readonly tags: Tag[];
 
   constructor(data: ProjectData, now: Date = new Date()) {
     this.id = data.id;
@@ -45,6 +52,8 @@ export class Project {
     this.project_start = data.project_start;
     this.project_end = data.project_end;
     this.time_ago = Project.computeTimeAgo(now, data.project_end);
+    this.technologies = data.technologies ?? [];
+    this.tags = data.tags ?? [];
   }
 
   private static computeTimeAgo(now: Date, project_end: string | null): string {

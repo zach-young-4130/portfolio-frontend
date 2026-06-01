@@ -23,11 +23,11 @@
               }
             </p>
             <p class="mb-3">{{ item.description }}</p>
-            @if (techList(item.tech_stack).length > 0) {
-              <ul class="list-inline mb-3 community-tech" aria-label="Technologies taught">
-                @for (tech of techList(item.tech_stack); track tech) {
+            @if (item.tags.length > 0) {
+              <ul class="list-inline mb-3 community-tech" aria-label="Tags">
+                @for (tag of item.tags; track tag.id) {
                   <li class="list-inline-item">
-                    <span class="badge tech-badge">{{ tech }}</span>
+                    <span class="badge tag-badge">{{ tag.name }}</span>
                   </li>
                 }
               </ul>

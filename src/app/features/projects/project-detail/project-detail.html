@@ -14,14 +14,26 @@
         <img [src]="p.cover_image_url" [alt]="p.title + ' cover image'" class="img-fluid rounded my-4" />
       }
 
-      <h2 class="h5 mt-4">Tech stack</h2>
-      <ul class="list-inline mb-4" aria-label="Tech stack">
-        @for (tech of techList(); track tech) {
-          <li class="list-inline-item">
-            <span class="badge tech-badge">{{ tech }}</span>
-          </li>
-        }
-      </ul>
+      @if (p.technologies.length > 0) {
+        <h2 class="h5 mt-4">Tech stack</h2>
+        <ul class="list-inline mb-3" aria-label="Technologies">
+          @for (tech of p.technologies; track tech.id) {
+            <li class="list-inline-item">
+              <span class="badge tech-badge">{{ tech.name }}</span>
+            </li>
+          }
+        </ul>
+      }
+
+      @if (p.tags.length > 0) {
+        <ul class="list-inline mb-4" aria-label="Tags">
+          @for (tag of p.tags; track tag.id) {
+            <li class="list-inline-item">
+              <span class="badge tag-badge">{{ tag.name }}</span>
+            </li>
+          }
+        </ul>
+      }
 
       <h2 class="h5">About this project</h2>
       <p class="project-description">{{ p.description }}</p>

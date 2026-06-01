@@ -7,9 +7,13 @@ import { Project, ProjectData } from '../models/project.model';
 export class ProjectsService {
   private api = inject(ApiService);
 
-  list() {
+  list(filters?: { tag?: string; technology?: string }) {
+    const params: Record<string, string> = {};
+    if (filters?.tag) params['tag'] = filters.tag;
+    if (filters?.technology) params['technology'] = filters.technology;
+    const hasParams = Object.keys(params).length > 0;
     return this.api
-      .get<{ projects: ProjectData[] }>('projects')
+      .get<{ projects: ProjectData[] }>('projects', hasParams ? params : undefined)
       .pipe(map((res) => ({ projects: res.projects.map((p) => new Project(p)) })));
   }
 

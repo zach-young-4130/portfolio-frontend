@@ -1,0 +1,96 @@
+<section class="container py-5">
+  <header class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2 m-0">Manage Tags</h1>
+    <button type="button" class="btn btn-primary" (click)="openNew()">New tag</button>
+  </header>
+
+  @if (tags().length === 0) {
+    <p class="text-muted">No tags yet.</p>
+  } @else {
+    <div class="table-responsive">
+      <table class="table align-middle" aria-label="Tags">
+        <caption class="visually-hidden">All available tags for projects and community items.</caption>
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Slug</th>
+            <th scope="col" class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (tag of tags(); track tag.id) {
+            <tr>
+              <th scope="row" class="fw-normal">{{ tag.name }}</th>
+              <td><code>{{ tag.slug }}</code></td>
+              <td class="text-end">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-secondary me-2"
+                  (click)="openEdit(tag)"
+                  [attr.aria-label]="'Edit ' + tag.name"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-danger"
+                  (click)="confirmDelete(tag)"
+                  [attr.aria-label]="'Delete ' + tag.name"
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
+
+<ng-template #editModal let-modal>
+  <div class="modal-header">
+    <h2 class="modal-title h5" id="tag-modal-title">
+      {{ editing() ? 'Edit tag' : 'New tag' }}
+    </h2>
+    <button
+      type="button"
+      class="btn-close"
+      aria-label="Close dialog"
+      (click)="modal.dismiss()"
+    ></button>
+  </div>
+  <form [formGroup]="form" (ngSubmit)="save(modal.close)" novalidate>
+    <div class="modal-body">
+      <div class="mb-3">
+        <label for="tag-name" class="form-label">Name</label>
+        <input id="tag-name" class="form-control" formControlName="name" />
+      </div>
+      <div class="mb-3">
+        <label for="tag-slug" class="form-label">Slug</label>
+        <input id="tag-slug" class="form-control" formControlName="slug" placeholder="e.g. open-source" />
+        <div class="form-text">Lowercase letters, numbers, and hyphens only.</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="form.invalid">Save</button>
+    </div>
+  </form>
+</ng-template>
+
+<ng-template #deleteModal let-modal>
+  <div class="modal-header">
+    <h2 class="modal-title h5" id="delete-tag-modal-title">Delete tag</h2>
+    <button type="button" class="btn-close" aria-label="Close dialog" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <p class="m-0">
+      Delete &ldquo;{{ editing()?.name }}&rdquo;? This will remove it from all projects and community items.
+    </p>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">Cancel</button>
+    <button type="button" class="btn btn-danger" (click)="modal.close(true)">Delete</button>
+  </div>
+</ng-template>

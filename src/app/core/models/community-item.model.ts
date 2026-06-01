@@ -1,3 +1,5 @@
+import { Tag } from './tag.model';
+
 export interface CommunityItem {
   id: number;
   title: string;
@@ -8,4 +10,5 @@ export interface CommunityItem {
   tech_stack: string | null;
   position: number | null;
   published: boolean;
+  tags: Tag[];
 }

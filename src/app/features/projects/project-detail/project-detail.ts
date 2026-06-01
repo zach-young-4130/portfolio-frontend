@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, DestroyRef, inject, signal, computed, input, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, DestroyRef, inject, signal, input, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { ProjectsService } from '../../../core/services/projects.service';
@@ -20,16 +20,6 @@ export class ProjectDetailComponent implements OnInit {
 
   protected project = signal<Project | null>(null);
   protected notFound = signal(false);
-
-  protected techList = computed(() => {
-    const p = this.project();
-    return p
-      ? p.tech_stack
-          .split(',')
-          .map((t) => t.trim())
-          .filter(Boolean)
-      : [];
-  });
 
   ngOnInit(): void {
     const numericId = Number(this.id());

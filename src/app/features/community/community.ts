@@ -19,11 +19,6 @@ export class CommunityComponent implements OnInit {
   protected items = signal<CommunityItem[]>([]);
   protected loading = signal(true);
 
-  protected techList(techStack: string | null): string[] {
-    if (!techStack) return [];
-    return techStack.split(',').map((t) => t.trim()).filter(Boolean);
-  }
-
   ngOnInit(): void {
     this.communityService
       .list()

@@ -25,13 +25,25 @@
     </h3>
     <p class="text-muted small mb-3">{{ p.tagline }}</p>
 
-    <ul class="list-inline mb-3 tech-stack" aria-label="Tech stack">
-      @for (tech of techList(); track tech) {
-        <li class="list-inline-item">
-          <span class="badge tech-badge">{{ tech }}</span>
-        </li>
-      }
-    </ul>
+    @if (p.technologies.length > 0) {
+      <ul class="list-inline mb-2 tech-stack" aria-label="Technologies">
+        @for (tech of p.technologies; track tech.id) {
+          <li class="list-inline-item">
+            <span class="badge tech-badge">{{ tech.name }}</span>
+          </li>
+        }
+      </ul>
+    }
+
+    @if (p.tags.length > 0) {
+      <ul class="list-inline mb-3" aria-label="Tags">
+        @for (tag of p.tags; track tag.id) {
+          <li class="list-inline-item">
+            <span class="badge tag-badge">{{ tag.name }}</span>
+          </li>
+        }
+      </ul>
+    }
 
     <div class="mt-auto d-flex gap-2 project-card-actions">
       @if (p.live_url) {
