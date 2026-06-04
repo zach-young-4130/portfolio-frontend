@@ -1,8 +1,10 @@
 :host { display: block; }
 
 .search-bar {
-  max-width: 540px;
   margin-inline: auto;
+
+  @media (min-width: 768px) { max-width: 640px; }
+  @media (min-width: 992px) { max-width: 780px; }
 }
 
 .search-input-wrap {
