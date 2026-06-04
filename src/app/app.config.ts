@@ -1,10 +1,12 @@
 import {
   ApplicationConfig,
+  ErrorHandler,
   PLATFORM_ID,
   inject,
   provideAppInitializer,
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
+import { ChunkLoadErrorHandler } from './core/chunk-load-error.handler';
 import { isPlatformBrowser } from '@angular/common';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
@@ -18,6 +20,7 @@ import { TokenService } from './core/services/token.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    { provide: ErrorHandler, useClass: ChunkLoadErrorHandler },
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes, withComponentInputBinding()),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
