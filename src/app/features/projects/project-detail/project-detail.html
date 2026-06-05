@@ -1,55 +1,79 @@
-<section class="container py-5">
+<section class="container py-5 project-detail">
   @if (notFound()) {
     <p role="alert" class="text-center">
       Project not found.
       <a routerLink="/projects" class="ms-2">Back to projects</a>
     </p>
   } @else if (project(); as p) {
-    <article>
-      <a routerLink="/projects" class="small text-muted text-decoration-none">&larr; Back to projects</a>
-      <h1 class="display-4 fw-bold mt-3">{{ p.title }}</h1>
-      <p class="lead text-muted">{{ p.tagline }}</p>
-      @if (p.cover_image_url) {
-        <img [src]="p.cover_image_url" [alt]="p.title + ' cover image'" class="img-fluid rounded my-4" />
-      }
-      @if (p.technologies.length > 0) {
-        <h2 class="h5 mt-4">Tech stack</h2>
-        <ul class="list-inline mb-3" aria-label="Technologies">
-          @for (tech of p.technologies; track tech.id) {
-            <li class="list-inline-item">
-              <span class="badge tech-badge">{{ tech.name }}</span>
-            </li>
+    <a routerLink="/projects" class="back-link small text-decoration-none">&larr; Back to projects</a>
+
+    <header class="project-header mt-3 mb-4 mb-lg-5">
+      <h1 class="display-5 fw-bold mb-2">{{ p.title }}</h1>
+      <p class="lead text-muted mb-0">{{ p.tagline }}</p>
+    </header>
+
+    <div class="row g-4 g-lg-5">
+      <div class="col-lg-7 order-2 order-lg-1">
+        <h2 class="h5">About this project</h2>
+        <p class="project-description">{{ p.description }}</p>
+
+        <div class="d-flex flex-wrap gap-3 mt-4">
+          @if (p.live_url) {
+            <a [href]="p.live_url" target="_blank" rel="noopener" class="btn btn-primary"
+               [attr.aria-label]="'Open live site for ' + p.title">
+              View Live &rarr;
+            </a>
           }
-        </ul>
-      }
-
-      @if (p.tags.length > 0) {
-        <ul class="list-inline mb-4" aria-label="Tags">
-          @for (tag of p.tags; track tag.id) {
-            <li class="list-inline-item">
-              <span class="badge tag-badge">{{ tag.name }}</span>
-            </li>
+          @if (p.repo_url) {
+            <a [href]="p.repo_url" target="_blank" rel="noopener" class="btn btn-outline-secondary"
+               [attr.aria-label]="'Open repository for ' + p.title">View Code</a>
           }
-        </ul>
-      }
-
-      <h2 class="h5">About this project</h2>
-      <p class="project-description">{{ p.description }}</p>
-
-      <div class="d-flex gap-3 mt-4">
-        @if (p.live_url) {
-          <a [href]="p.live_url" target="_blank" rel="noopener" class="btn btn-primary"
-             [attr.aria-label]="'Open live site for ' + p.title">
-            View Live &rarr;
-          </a>
-        }
-        @if (p.repo_url) {
-          <a [href]="p.repo_url" target="_blank" rel="noopener" class="btn btn-outline-secondary"
-             [attr.aria-label]="'Open repository for ' + p.title">View Code</a>
-        }
+        </div>
       </div>
-    </article>
+
+      <aside class="col-lg-5 order-1 order-lg-2">
+        @if (p.cover_image_url) {
+          <button
+            type="button"
+            class="cover-thumb"
+            (click)="lightbox.open(p.cover_image_url, p.title + ' home page screenshot')"
+            [attr.aria-label]="'Enlarge ' + p.title + ' screenshot'"
+          >
+            <img [src]="p.cover_image_url" [alt]="p.title + ' home page screenshot'" class="cover-image" />
+            <span class="cover-hint" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/>
+              </svg>
+              Click to enlarge
+            </span>
+          </button>
+        }
+
+        @if (p.technologies.length > 0) {
+          <h2 class="h6 text-uppercase text-muted mt-3 mb-2">Tech stack</h2>
+          <ul class="list-inline mb-3" aria-label="Technologies">
+            @for (tech of p.technologies; track tech.id) {
+              <li class="list-inline-item">
+                <span class="badge tech-badge">{{ tech.name }}</span>
+              </li>
+            }
+          </ul>
+        }
+
+        @if (p.tags.length > 0) {
+          <ul class="list-inline mb-0" aria-label="Tags">
+            @for (tag of p.tags; track tag.id) {
+              <li class="list-inline-item">
+                <span class="badge tag-badge">{{ tag.name }}</span>
+              </li>
+            }
+          </ul>
+        }
+      </aside>
+    </div>
   } @else {
     <p role="status" class="text-center">Loading&hellip;</p>
   }
+
+  <app-lightbox #lightbox />
 </section>

@@ -9,7 +9,7 @@
   <!-- ── Bio ───────────────────────────────────────────────────────────────── -->
   <div class="row g-5 align-items-start mb-5">
     <div class="col-lg-4 col-md-5 text-center text-md-start">
-      <div class="photo-thumb" (click)="openLightbox('/profile.png', 'Zach Young')">
+      <div class="photo-thumb" (click)="lightbox.open('/profile.png', 'Zach Young')">
         <img
           src="/profile.png"
           alt="Zach Young"
@@ -92,7 +92,7 @@
         </p>
       </div>
       <div class="col-lg-4">
-        <div class="photo-thumb mb-3" (click)="openLightbox('/about-podium.jpg', 'Zach Young on the podium at the 2015 ITU World Triathlon Championship in Edmonton, Canada, finishing 3rd representing the USA')">
+        <div class="photo-thumb mb-3" (click)="lightbox.open('/about-podium.jpg', 'Zach Young on the podium at the 2015 ITU World Triathlon Championship in Edmonton, Canada, finishing 3rd representing the USA')">
           <img
             src="/about-podium.jpg"
             alt="Zach Young on the podium at the 2015 ITU World Triathlon Championship in Edmonton, Canada, finishing 3rd representing the USA"
@@ -170,30 +170,4 @@
 
 </section>
 
-@if (lightboxSrc()) {
-  <div
-    class="lightbox-overlay"
-    role="dialog"
-    aria-modal="true"
-    [attr.aria-label]="'Photo: ' + lightboxAlt()"
-    (click)="closeLightbox()"
-    (keydown.escape)="closeLightbox()"
-    tabindex="0"
-  >
-    <button
-      type="button"
-      class="lightbox-close"
-      aria-label="Close photo"
-      (click)="closeLightbox()"
-    >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    </button>
-    <img
-      [src]="lightboxSrc()"
-      [alt]="lightboxAlt()"
-      (click)="$event.stopPropagation()"
-    />
-  </div>
-}
+<app-lightbox #lightbox />
