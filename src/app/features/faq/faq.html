@@ -14,7 +14,9 @@
           </h2>
           <div ngbAccordionCollapse>
             <div ngbAccordionBody>
-              <ng-template>{{ item.answer }}</ng-template>
+              <ng-template>
+                <div [innerHTML]="item.answer"></div>
+              </ng-template>
             </div>
           </div>
         </div>
