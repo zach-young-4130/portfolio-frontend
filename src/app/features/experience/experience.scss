@@ -139,6 +139,10 @@
 
 .education-section {
   border-top: 1px solid var(--border);
+
+  .timeline-card:not(:last-child) {
+    margin-bottom: 1rem;
+  }
 }
 
 // ── Tech chips ────────────────────────────────────────────────────────────
