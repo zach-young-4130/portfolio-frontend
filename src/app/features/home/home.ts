@@ -17,6 +17,7 @@ import { Project } from '../../core/models/project.model';
 import { FaqItem } from '../../core/models/faq-item.model';
 import { ProjectCardComponent } from '../../shared/components/project-card/project-card';
 import { ContactFormComponent } from '../../shared/components/contact-form/contact-form';
+import { environment } from '../../../environments/environment';
 import { ParallaxDirective } from '../../shared/directives/parallax.directive';
 
 @Component({
@@ -48,8 +49,8 @@ export class HomeComponent implements OnInit {
         '@type': 'Person',
         name: 'Zach Young',
         jobTitle: 'Senior Full-Stack Software Engineer',
-        url: 'https://zachyoung.com',
-        image: 'https://zachyoung.com/profile.png',
+        url: environment.siteUrl,
+        image: `${environment.siteUrl}/profile.png`,
         address: {
           '@type': 'PostalAddress',
           addressLocality: 'Cape Girardeau',

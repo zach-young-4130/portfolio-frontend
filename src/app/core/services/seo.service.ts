@@ -3,8 +3,9 @@ import { isPlatformBrowser } from '@angular/common';
 import { DOCUMENT } from '@angular/common';
 import { Meta, Title } from '@angular/platform-browser';
 import { Router } from '@angular/router';
+import { environment } from '../../../environments/environment';
 
-const BASE_URL = 'https://zachyoung.com';
+const BASE_URL = environment.siteUrl;
 const DEFAULT_IMAGE = `${BASE_URL}/profile.png`;
 
 export interface SeoConfig {
