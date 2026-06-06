@@ -4,6 +4,7 @@ import {
   ElementRef,
   PLATFORM_ID,
   ViewEncapsulation,
+  computed,
   inject,
   input,
   signal,
@@ -34,6 +35,7 @@ let nextId = 0;
 })
 export class CodeSnippetComponent {
   readonly label = input.required<string>();
+  readonly variant = input<'code' | 'tree'>('code');
 
   private readonly platformId = inject(PLATFORM_ID);
   private readonly elementRef = inject(ElementRef);
@@ -41,11 +43,12 @@ export class CodeSnippetComponent {
   protected readonly expanded = signal(false);
   protected readonly bodyId = `code-snippet-body-${++nextId}`;
 
-  // Held as TS constants because angle brackets inside a template interpolation
-  // string literal get tokenized by Angular's HTML parser before the expression
-  // is evaluated. Referencing properties keeps the source free of '<'/'>'.
-  protected readonly closedLabel = '<code/>';
-  protected readonly openLabel = '<code>';
+  // Built here rather than inline in the template because angle brackets inside
+  // a template interpolation literal get tokenized by Angular's HTML parser
+  // before the expression is evaluated. Keeping them in TS avoids '<'/'>'.
+  protected readonly tag = computed(() => (this.variant() === 'tree' ? 'tree' : 'code'));
+  protected readonly openLabel = computed(() => `<${this.tag()}>`);
+  protected readonly closedLabel = computed(() => `<${this.tag()}/>`);
 
   protected toggle(): void {
     this.expanded.update((v) => !v);

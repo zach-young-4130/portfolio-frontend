@@ -7,9 +7,9 @@
     class="btn btn-sm btn-outline-secondary snippet-toggle"
     [attr.aria-expanded]="expanded()"
     [attr.aria-controls]="bodyId"
-    [attr.aria-label]="(expanded() ? 'Hide code for ' : 'Show code for ') + label()"
+    [attr.aria-label]="(expanded() ? 'Hide ' : 'Show ') + tag() + ' for ' + label()"
     (click)="toggle()"
-  >{{ expanded() ? openLabel : closedLabel }}</button>
+  >{{ expanded() ? openLabel() : closedLabel() }}</button>
 
   @if (expanded()) {
     <div [id]="bodyId">
