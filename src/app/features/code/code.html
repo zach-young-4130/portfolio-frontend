@@ -340,32 +340,6 @@ path "/api/v1/projects" do
 end</code></pre>
   </app-code-snippet>
 
-  <app-code-snippet label="params.expect with association IDs">
-    <h3 class="h5">Rails 8 <code>params.expect</code> — accepting association ID arrays</h3>
-    <p class="text-secondary">
-      Rails 8 replaced <code>params.require.permit</code> with
-      <code>params.expect</code>, which raises on unexpected input rather
-      than silently dropping it. The non-obvious part is accepting
-      <code>technology_ids</code> and <code>tag_ids</code> as typed arrays
-      in the same call — the nested hash at the end of the array is the
-      Rails idiom for "these keys must be arrays." One API call atomically
-      replaces a project's M:M associations without a separate endpoint.
-    </p>
-<pre class="code-snippet"><code># app/controllers/api/v1/projects_controller.rb
-def project_params
-  params.expect(project: [
-    :title, :tagline, :description, :tech_stack,
-    :cover_image_url, :live_url, :repo_url,
-    :featured, :position, :published,
-    :project_start, :project_end,
-    {{ '{' }} technology_ids: [], tag_ids: [] {{ '}' }}
-  ])
-end
-
-# The frontend sends a flat payload — associations included
-# {{ '{' }} project: {{ '{' }} title: "…", technology_ids: [1, 3], tag_ids: [2] {{ '}' }} {{ '}' }}</code></pre>
-  </app-code-snippet>
-
   <app-code-snippet label="N+1 prevention">
     <h3 class="h5">N+1 prevention — <code>includes</code> on reads, re-fetch after writes</h3>
     <p class="text-secondary">

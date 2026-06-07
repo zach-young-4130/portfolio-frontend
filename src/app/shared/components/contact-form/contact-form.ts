@@ -70,13 +70,13 @@ export class ContactFormComponent {
           this.submitting.set(false);
           this.form.reset();
           if (this.hideSentTimeout) clearTimeout(this.hideSentTimeout);
-          this.hideSentTimeout = setTimeout(() => this.sent.set(false), 30_000);
+          this.hideSentTimeout = setTimeout(() => this.sent.set(false), 7_000);
         },
         error: () => {
           this.errorMessage.set('We could not send your message. Please try again.');
           this.submitting.set(false);
           if (this.hideErrorTimeout) clearTimeout(this.hideErrorTimeout);
-          this.hideErrorTimeout = setTimeout(() => this.errorMessage.set(null), 30_000);
+          this.hideErrorTimeout = setTimeout(() => this.errorMessage.set(null), 7_000);
         },
       });
   }
