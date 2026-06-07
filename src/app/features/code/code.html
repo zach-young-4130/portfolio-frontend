@@ -831,7 +831,7 @@ export class SeoService {{ '{' }}
 
   set(config: {{ '{' }} title: string; description: string; image?: string; jsonLd?: object {{ '}' }}): void {{ '{' }}
     const fullTitle = `${{ '$' }}{{ '{' }}config.title{{ '}' }} | Zach Young`;
-    const url       = `https://zachyoung.com${{ '$' }}{{ '{' }}this.router.url.split('?')[0]{{ '}' }}`;
+    const url       = `{{ '$' }}{{ '{' }}environment.siteUrl{{ '}' }}{{ '$' }}{{ '{' }}this.router.url.split('?')[0]{{ '}' }}`;
 
     this.titleService.setTitle(fullTitle);
 
@@ -881,8 +881,8 @@ export class ProjectsListComponent {{ '{' }}
   "@type": "Person",
   "name": "Zach Young",
   "jobTitle": "Senior Full-Stack Software Engineer",
-  "url": "https://zachyoung.com",
-  "image": "https://zachyoung.com/profile.png",
+  "url": "https://zachyoung.org",
+  "image": "https://zachyoung.org/profile.png",
   "address": {{ '{' }}
     "@type": "PostalAddress",
     "addressLocality": "Cape Girardeau",
