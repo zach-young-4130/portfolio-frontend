@@ -11,5 +11,8 @@ import { Component, ChangeDetectionStrategy, input } from '@angular/core';
 export class PageHeroComponent {
   title = input.required<string>();
   subtitle = input<string>('');
+  eyebrow = input<string>('');
+  // Retained for caller compatibility; the editorial header no longer renders a
+  // background photo.
   image = input<string>('sub-hero.jpg');
 }

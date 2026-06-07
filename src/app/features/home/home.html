@@ -1,42 +1,76 @@
-<section class="hero d-flex align-items-center" aria-labelledby="hero-heading">
-  <img src="hero.jpg" alt="" aria-hidden="true" class="hero-bg" [appParallax]="0.3" />
-  <div class="hero-overlay" aria-hidden="true"></div>
-  <div class="container text-center hero-content">
-    <p class="text-uppercase small mb-3 hero-eyebrow header-rise">Hello, I'm</p>
-    <h1 id="hero-heading" class="display-2 fw-bold mb-3 header-rise">
-      <span class="hero-name">Zach Young</span>
-    </h1>
-    <p class="lead mb-4 hero-subtitle header-rise-delayed">Full-Stack Engineer</p>
-    <div class="d-flex justify-content-center gap-3">
-      <a routerLink="/projects" class="btn btn-primary btn-lg hero-cta">View Projects</a>
-      <a routerLink="/contact" class="btn btn-outline-light btn-lg hero-cta">Contact Me</a>
+<section class="hero" aria-labelledby="hero-heading">
+  <span class="edge-label edge-label--left" aria-hidden="true">Portfolio — 2026</span>
+  <span class="edge-label edge-label--right" aria-hidden="true">Est. 2014</span>
+
+  <div class="container hero__inner">
+    <div class="hero__topline rule-top header-rise">
+      <span class="label-mono">Senior Full-Stack Engineer</span>
+      <span class="label-mono d-none d-sm-inline">Cape Girardeau, MO · CDT</span>
+    </div>
+
+    <div class="row align-items-start g-4 g-lg-5 hero__body">
+      <div class="col-lg-8 order-2 order-lg-1">
+        <p class="label-mono hero__eyebrow header-rise mb-3">Hello, I'm</p>
+        <h1 id="hero-heading" class="display-editorial header-rise mb-4">Zach<br /><span class="hero__name-outline">Young</span></h1>
+        <p class="hero__role header-rise-delayed mb-4">
+          Full-stack &amp; API-only Ruby on Rails, with TypeScript, Angular, and modern
+          HTML5, CSS3 &amp; ES6 JavaScript — 10+ years shipping production software.
+        </p>
+        <div class="d-flex flex-wrap gap-3">
+          <a routerLink="/projects" class="btn btn-primary btn-lg hero-cta">View Projects →</a>
+          <a routerLink="/contact" class="btn btn-outline-fg btn-lg hero-cta">Contact</a>
+        </div>
+      </div>
+      <div class="col-lg-4 order-1 order-lg-2 d-flex justify-content-center justify-content-lg-end">
+        <figure class="hero__portrait header-rise-delayed">
+          <img src="profile.png" alt="Zach Young" class="photo-bw" />
+          <figcaption class="label-mono">Fig. 01 — Zach Young</figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <div class="rule-bottom hero__baseline">
+      <button type="button" class="label-mono hero__scroll" (click)="scrollToContent()" aria-label="Scroll to content">
+        Scroll <span class="hero__scroll-arrow" aria-hidden="true">↓</span>
+      </button>
+      <span class="label-mono d-none d-sm-inline" aria-hidden="true">Selected Work · FAQ · Contact</span>
     </div>
   </div>
 </section>
 
 @if (featured().length > 0) {
-  <section class="py-5" aria-labelledby="featured-heading">
+  <section class="py-editorial" aria-labelledby="featured-heading">
     <div class="container">
-      <h2 id="featured-heading" class="h2 mb-4 text-center">Featured Projects</h2>
-      <div class="row g-4">
+      <header class="section-head rule-top">
+        <span class="section-index">01</span>
+        <h2 id="featured-heading" class="section-title">Selected Work</h2>
+        <span class="section-head__spacer"></span>
+        <a routerLink="/projects" class="label-mono section-head__link d-none d-md-inline">All projects →</a>
+      </header>
+      <div class="row g-4 mt-1">
         @for (project of featured(); track project.id) {
           <div class="col-md-6 col-lg-4">
             <app-project-card [project]="project" />
           </div>
         }
       </div>
-      <div class="text-center mt-4">
-        <a routerLink="/projects" class="btn btn-outline-primary">See all projects</a>
+      <div class="mt-4 d-md-none">
+        <a routerLink="/projects" class="btn btn-outline-fg">See all projects</a>
       </div>
     </div>
   </section>
 }
 
 @if (topFaqs().length > 0) {
-  <section class="py-5 section-surface" aria-labelledby="faq-heading">
+  <section class="py-editorial section-surface" aria-labelledby="faq-heading">
     <div class="container">
-      <h2 id="faq-heading" class="h2 mb-4 text-center">Frequently Asked</h2>
-      <div ngbAccordion class="mx-auto" style="max-width: 720px;">
+      <header class="section-head rule-top">
+        <span class="section-index">02</span>
+        <h2 id="faq-heading" class="section-title">Frequently Asked</h2>
+        <span class="section-head__spacer"></span>
+        <a routerLink="/faq" class="label-mono section-head__link d-none d-md-inline">All questions →</a>
+      </header>
+      <div ngbAccordion role="region" aria-label="Frequently asked questions" class="home-faq mt-4">
         @for (item of topFaqs(); track item.id) {
           <div ngbAccordionItem>
             <h3 ngbAccordionHeader>
@@ -44,29 +78,34 @@
             </h3>
             <div ngbAccordionCollapse>
               <div ngbAccordionBody>
-                <ng-template>{{ item.answer }}</ng-template>
+                <ng-template>
+                  <div [innerHTML]="item.answer"></div>
+                </ng-template>
               </div>
             </div>
           </div>
         }
       </div>
-      <div class="text-center mt-4">
-        <a routerLink="/faq" class="btn btn-outline-primary">All questions</a>
-      </div>
     </div>
   </section>
 }
 
-<section class="home-contact py-5" aria-labelledby="home-contact-heading">
-  <img src="hero.jpg" alt="" aria-hidden="true" class="home-contact__bg" [appParallax]="0.3" />
-  <div class="home-contact__overlay" aria-hidden="true"></div>
-  <div class="container home-contact__content">
-    <div class="home-contact__panel mx-auto">
-      <header class="text-center mb-4">
-        <h2 id="home-contact-heading" class="h2">Get in touch</h2>
-        <p class="text-muted mb-0">Have a project in mind? I'd love to hear about it.</p>
-      </header>
-      <app-contact-form />
+<section class="py-editorial home-contact" aria-labelledby="home-contact-heading">
+  <div class="container">
+    <header class="section-head rule-top">
+      <span class="section-index">03</span>
+      <h2 id="home-contact-heading" class="section-title">Get in Touch</h2>
+    </header>
+    <div class="row g-4 g-lg-5 mt-1">
+      <div class="col-lg-5">
+        <p class="home-contact__lead">
+          Have a project in mind, a role to fill, or just want to talk shop? I'd love to hear about it.
+        </p>
+        <p class="label-mono home-contact__meta">Cape Girardeau, MO · Remote · CDT</p>
+      </div>
+      <div class="col-lg-7">
+        <app-contact-form />
+      </div>
     </div>
   </div>
 </section>

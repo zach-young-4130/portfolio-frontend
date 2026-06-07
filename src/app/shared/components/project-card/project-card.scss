@@ -4,20 +4,41 @@
 }
 
 .project-card {
-  background: var(--bg-surface);
+  background: var(--bg);
   border: 1px solid var(--border);
   color: var(--fg);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 0.2s ease, transform 0.2s ease;
 
   &:hover {
+    border-color: var(--fg);
     transform: translateY(-2px);
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
   }
 }
 
 .project-cover {
   aspect-ratio: 16 / 9;
   object-fit: cover;
+  border-bottom: 1px solid var(--border);
+}
+
+.card-title {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+
+.project-tagline {
+  color: var(--fg-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .project-card {
+    transition: none;
+
+    &:hover {
+      transform: none;
+    }
+  }
 }
 
 .card-title a {

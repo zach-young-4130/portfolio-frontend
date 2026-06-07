@@ -20,10 +20,12 @@
         [attr.aria-invalid]="
           form.controls.name.invalid && form.controls.name.touched ? 'true' : null
         "
-        aria-describedby="contact-form-name-error"
+        [attr.aria-describedby]="
+          form.controls.name.invalid && form.controls.name.touched ? 'contact-form-name-error' : null
+        "
       />
       @if (form.controls.name.invalid && form.controls.name.touched) {
-        <p id="contact-form-name-error" class="form-text text-danger" role="alert">
+        <p id="contact-form-name-error" class="form-text text-danger">
           Please enter your name.
         </p>
       }
@@ -41,30 +43,34 @@
         [attr.aria-invalid]="
           form.controls.email.invalid && form.controls.email.touched ? 'true' : null
         "
-        aria-describedby="contact-form-email-error"
+        [attr.aria-describedby]="
+          form.controls.email.invalid && form.controls.email.touched ? 'contact-form-email-error' : null
+        "
       />
       @if (form.controls.email.invalid && form.controls.email.touched) {
-        <p id="contact-form-email-error" class="form-text text-danger" role="alert">
+        <p id="contact-form-email-error" class="form-text text-danger">
           Please enter a valid email.
         </p>
       }
     </div>
 
     <div class="mb-3">
-      <label for="contact-form-project-name" class="form-label">Project Name</label>
+      <label for="contact-form-project-name" class="form-label">Project or Company Name</label>
       <input
         id="contact-form-project-name"
         type="text"
         class="form-control"
         formControlName="project_name"
-        placeholder="Brief project title"
+        placeholder="Project or company name"
         [attr.aria-invalid]="
           form.controls.project_name.invalid && form.controls.project_name.touched ? 'true' : null
         "
-        aria-describedby="contact-form-project-name-error"
+        [attr.aria-describedby]="
+          form.controls.project_name.invalid && form.controls.project_name.touched ? 'contact-form-project-name-error' : null
+        "
       />
       @if (form.controls.project_name.invalid && form.controls.project_name.touched) {
-        <p id="contact-form-project-name-error" class="form-text text-danger" role="alert">
+        <p id="contact-form-project-name-error" class="form-text text-danger">
           Please enter a minimum of 3 characters and a maximum of 100 characters.
         </p>
       }
@@ -81,10 +87,12 @@
         [attr.aria-invalid]="
           form.controls.message.invalid && form.controls.message.touched ? 'true' : null
         "
-        aria-describedby="contact-form-message-error"
+        [attr.aria-describedby]="
+          form.controls.message.invalid && form.controls.message.touched ? 'contact-form-message-error' : null
+        "
       ></textarea>
       @if (form.controls.message.invalid && form.controls.message.touched) {
-        <p id="contact-form-message-error" class="form-text text-danger" role="alert">
+        <p id="contact-form-message-error" class="form-text text-danger">
           Please write at least 10 characters.
         </p>
       }

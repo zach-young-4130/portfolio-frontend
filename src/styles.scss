@@ -1,9 +1,12 @@
-// 1. Bootstrap variables and import
-$primary: #4b9cd3; // UNC Carolina Blue
-$secondary: #1a1a2e;
-$font-family-sans-serif: ('Source Serif 4', Georgia, serif);
-$headings-font-family:   ('Lato', system-ui, -apple-system, sans-serif);
-$border-radius: 0.375rem;
+// 1. Bootstrap variables and import — Editorial Mono design system
+$primary:   #1366d6; // royal-Carolina blue, accessible on white (interactive accent)
+$secondary: #0a0a0a;
+$font-family-sans-serif: ('Inter', system-ui, -apple-system, sans-serif);
+$headings-font-family:   ('Space Grotesk', 'Inter', system-ui, sans-serif);
+$headings-font-weight: 700;
+$border-radius:    0;     // brutalist — crisp, square corners
+$border-radius-sm: 0;
+$border-radius-lg: 0;
 $enable-negative-margins: true;
 
 @import 'bootstrap/scss/bootstrap';
@@ -11,26 +14,32 @@ $enable-negative-margins: true;
 // 2. CSS custom properties — light theme (default)
 :root,
 .theme-light {
-  --bg:          #ffffff;
-  --bg-surface:  #e9ecef;
-  --fg:          #111111;
-  --fg-muted:    #6c757d;
-  --accent:      #4b9cd3;
-  --accent-dark: #2a7ab8;
-  --border:      #ced4da;
-  --nav-bg:      rgba(255, 255, 255, 0.95);
+  --bg:           #ffffff;
+  --bg-surface:   #f4f4f5;
+  --fg:           #0a0a0a;       // near-black
+  --fg-muted:     #6b6b72;
+  --fg-inverse:   #ffffff;
+  --accent:       #1366d6;       // interactive blue (links, CTAs, hover)
+  --accent-dark:  #0f4fa8;
+  --accent-bright:#4b9cd3;       // Carolina, for large fills / imagery accents
+  --border:       #e4e4e7;       // subtle grid hairline
+  --rule:         #0a0a0a;       // emphasis hairline (editorial rules)
+  --nav-bg:       rgba(255, 255, 255, 0.9);
 }
 
 // 3. Dark theme
 .theme-dark {
-  --bg:          #18181b;
-  --bg-surface:  #27272a;
-  --fg:          #fafafa;
-  --fg-muted:    #a1a1aa;
-  --accent:      #4b9cd3;
-  --accent-dark: #6fb3e0;
-  --border:      #3f3f46;
-  --nav-bg:      rgba(24, 24, 27, 0.95);
+  --bg:           #0a0a0a;
+  --bg-surface:   #161618;
+  --fg:           #fafafa;
+  --fg-muted:     #9b9ba3;
+  --fg-inverse:   #0a0a0a;
+  --accent:       #5aa9e0;       // brighter Carolina for dark canvas
+  --accent-dark:  #8fc4ec;
+  --accent-bright:#4b9cd3;
+  --border:       #2a2a2e;
+  --rule:         #fafafa;
+  --nav-bg:       rgba(10, 10, 10, 0.9);
 }
 
 // 4. Base reset
@@ -111,6 +120,10 @@ main > :not(router-outlet) > section:last-child {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
   .header-rise,
   .header-rise-delayed,
   .hero-cta {
@@ -148,7 +161,111 @@ main > :not(router-outlet) > section:last-child {
   font-size: 0.7rem;
 }
 
-// 8. Skip link helper for keyboard users
+// 8. Editorial Mono — type, labels, rules, section heads, edge labels
+.display-editorial {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  font-size: clamp(3.25rem, 13vw, 11rem);
+}
+
+// Mono-style micro label (eyebrows, edge labels, section indices)
+.label-mono {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--fg-muted);
+  margin: 0;
+}
+
+// Hairline rules
+.rule-top    { border-top: 1px solid var(--rule); }
+.rule-bottom { border-bottom: 1px solid var(--rule); }
+
+// Editorial section header: index · title · optional link, over a top rule
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 1.25rem;
+  padding-top: 1.25rem;
+}
+
+.section-index {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  flex-shrink: 0;
+}
+
+.section-title {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  font-size: clamp(1.75rem, 4vw, 3rem);
+  line-height: 1;
+  margin: 0;
+}
+
+.section-head__spacer { flex: 1 1 auto; }
+
+// Rotated edge labels (Fila-style) — anchored to the viewport edges
+.edge-label {
+  position: absolute;
+  top: 50%;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--fg-muted);
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  white-space: nowrap;
+  pointer-events: none;
+
+  &--left {
+    left: 1.25rem;
+    transform: translateY(-50%) rotate(180deg);
+    writing-mode: vertical-rl;
+  }
+
+  &--right {
+    right: 1.25rem;
+    transform: translateY(-50%);
+    writing-mode: vertical-rl;
+  }
+}
+
+// Theme-aware outline button (replaces btn-outline-dark/light which are fixed)
+.btn-outline-fg {
+  border: 1px solid var(--fg);
+  color: var(--fg);
+  background: transparent;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--fg);
+    color: var(--bg);
+    border-color: var(--fg);
+  }
+}
+
+// Generous editorial section rhythm
+.py-editorial {
+  padding-top: clamp(3.5rem, 9vw, 7rem);
+  padding-bottom: clamp(3.5rem, 9vw, 7rem);
+}
+
+@media (max-width: 991.98px) {
+  .edge-label { display: none; }
+}
+
+// 9. Skip link helper for keyboard users
 .skip-link {
   position: absolute;
   top: -40px;
