@@ -49,6 +49,17 @@
   }
 }
 
+// "All projects" phrase + the em-dash placeholder for unused techs
+.stack-item__all,
+.stack-item__none {
+  color: var(--fg-muted);
+  font-size: 0.85rem;
+}
+
+.stack-item__all {
+  font-style: italic;
+}
+
 @media (min-width: 768px) {
   .stack-item {
     grid-template-columns: 14rem 1fr;

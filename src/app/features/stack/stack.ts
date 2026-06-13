@@ -13,6 +13,7 @@ import { TechBadgeComponent } from '../../shared/components/tech-badge/tech-badg
 interface TechWithProjects {
   tech: Technology;
   projects: { id: number; title: string }[];
+  usedInAll: boolean;
 }
 
 interface CategoryGroup {
@@ -26,9 +27,9 @@ interface CategoryGroup {
 const CATEGORY_ORDER: ReadonlyArray<{ key: string; label: string }> = [
   { key: 'language', label: 'Languages' },
   { key: 'framework', label: 'Frameworks' },
-  { key: 'platform', label: 'Platforms' },
   { key: 'tool', label: 'Tools' },
   { key: 'library', label: 'Libraries' },
+  { key: 'platform', label: 'Infrastructure' },
   { key: 'other', label: 'Other' },
 ];
 
@@ -52,7 +53,7 @@ export class StackComponent implements OnInit {
     inject(SeoService).set({
       title: 'Stack',
       description:
-        'The full set of languages, frameworks, platforms, and tools Zach Young has shipped production software with — grouped by category and mapped to the projects that used them.',
+        'The full set of languages, frameworks, libraries, infrastructure, and tools Zach Young has shipped production software with — grouped by category and mapped to the projects that used them.',
     });
   }
 
@@ -74,17 +75,22 @@ export class StackComponent implements OnInit {
   // Buckets technologies into ordered category groups, and for each technology
   // resolves the projects that use it. Empty categories are dropped.
   private buildGroups(technologies: Technology[], projects: Project[]): CategoryGroup[] {
+    const total = projects.length;
     return CATEGORY_ORDER.map(({ key, label }) => ({
       key,
       label,
       technologies: technologies
         .filter((tech) => (tech.category ?? 'other') === key)
-        .map((tech) => ({
-          tech,
-          projects: projects
-            .filter((p) => p.technologies.some((t) => t.id === tech.id))
-            .map((p) => ({ id: p.id, title: p.title })),
-        })),
+        .map((tech) => {
+          const used = projects.filter((p) => p.technologies.some((t) => t.id === tech.id));
+          return {
+            tech,
+            projects: used.map((p) => ({ id: p.id, title: p.title })),
+            // Ubiquitous techs (used in every project) render as "All projects"
+            // instead of an unwieldy list of every title.
+            usedInAll: total > 0 && used.length === total,
+          };
+        }),
     })).filter((group) => group.technologies.length > 0);
   }
 }
