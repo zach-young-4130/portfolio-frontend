@@ -9,6 +9,10 @@ nav {
 }
 
 .navbar-brand {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: var(--fg);
 
   &:hover {
@@ -17,11 +21,15 @@ nav {
 }
 
 .nav-link {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.78rem;
+  font-weight: 500;
   color: var(--fg);
 
   &.active {
     color: var(--accent);
-    font-weight: 600;
   }
 
   &:hover {
@@ -38,4 +46,8 @@ nav {
   --bs-btn-active-bg: var(--fg);
   --bs-btn-active-color: var(--bg);
   --bs-btn-active-border-color: var(--fg);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+  font-weight: 500;
 }

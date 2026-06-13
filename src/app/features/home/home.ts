@@ -2,11 +2,13 @@ import {
   Component,
   ChangeDetectionStrategy,
   DestroyRef,
+  PLATFORM_ID,
   inject,
   signal,
   computed,
   OnInit,
 } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { NgbAccordionModule } from '@ng-bootstrap/ng-bootstrap';
@@ -18,7 +20,6 @@ import { FaqItem } from '../../core/models/faq-item.model';
 import { ProjectCardComponent } from '../../shared/components/project-card/project-card';
 import { ContactFormComponent } from '../../shared/components/contact-form/contact-form';
 import { environment } from '../../../environments/environment';
-import { ParallaxDirective } from '../../shared/directives/parallax.directive';
 
 @Component({
   selector: 'app-home',
@@ -28,7 +29,6 @@ import { ParallaxDirective } from '../../shared/directives/parallax.directive';
     NgbAccordionModule,
     ProjectCardComponent,
     ContactFormComponent,
-    ParallaxDirective,
   ],
   templateUrl: './home.html',
   styleUrl: './home.scss',
@@ -39,6 +39,15 @@ export class HomeComponent implements OnInit {
   private faqService = inject(FaqService);
   private seoService = inject(SeoService);
   private destroyRef = inject(DestroyRef);
+  private platformId = inject(PLATFORM_ID);
+
+  protected scrollToContent(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    const next = document.querySelector('.hero')?.nextElementSibling as HTMLElement | null;
+    if (!next) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    next.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+  }
 
   constructor() {
     this.seoService.set({

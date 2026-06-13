@@ -1,0 +1,41 @@
+:host {
+  display: block;
+  margin-top: 2.5rem;
+}
+
+.code-section-heading {
+  margin: 0;
+}
+
+.code-section-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  color: var(--fg);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.15s ease;
+
+  &:hover {
+    color: var(--accent);
+  }
+}
+
+.code-section-chevron {
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+
+  &.is-open {
+    transform: rotate(90deg);
+  }
+}
+
+.code-section-body {
+  padding-top: 1.5rem;
+}

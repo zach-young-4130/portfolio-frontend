@@ -9,10 +9,15 @@
   <!-- ── Bio ───────────────────────────────────────────────────────────────── -->
   <div class="row g-5 align-items-start mb-5">
     <div class="col-lg-4 col-md-5 text-center text-md-start">
-      <div class="photo-thumb" (click)="lightbox.open('/profile.png', 'Zach Young')">
+      <button
+        type="button"
+        class="photo-thumb"
+        aria-label="Enlarge photo of Zach Young"
+        (click)="lightbox.open('/profile.png', 'Zach Young')"
+      >
         <img
           src="/profile.png"
-          alt="Zach Young"
+          alt=""
           class="profile-photo"
         />
         <span class="photo-expand-icon" aria-hidden="true">
@@ -21,7 +26,7 @@
             <line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
           </svg>
         </span>
-      </div>
+      </button>
       <div class="profile-meta mt-4">
         <p class="about-label">Based in</p>
         <p class="mb-3">Cape Girardeau, Missouri</p>
@@ -92,10 +97,15 @@
         </p>
       </div>
       <div class="col-lg-4">
-        <div class="photo-thumb mb-3" (click)="lightbox.open('/about-podium.jpg', 'Zach Young on the podium at the 2015 ITU World Triathlon Championship in Edmonton, Canada, finishing 3rd representing the USA')">
+        <button
+          type="button"
+          class="photo-thumb mb-3"
+          aria-label="Enlarge podium photo of Zach Young at the 2015 ITU World Triathlon Championship"
+          (click)="lightbox.open('/about-podium.jpg', 'Zach Young on the podium at the 2015 ITU World Triathlon Championship in Edmonton, Canada, finishing 3rd representing the USA')"
+        >
           <img
             src="/about-podium.jpg"
-            alt="Zach Young on the podium at the 2015 ITU World Triathlon Championship in Edmonton, Canada, finishing 3rd representing the USA"
+            alt=""
             class="podium-photo"
           />
           <span class="photo-expand-icon" aria-hidden="true">
@@ -104,7 +114,7 @@
               <line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
             </svg>
           </span>
-        </div>
+        </button>
         <div class="achievement-card">
           <ul class="achievement-list" aria-label="Athletic highlights">
             <li>

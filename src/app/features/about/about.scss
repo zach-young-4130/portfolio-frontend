@@ -102,6 +102,18 @@
 .photo-thumb {
   position: relative;
   cursor: zoom-in;
+  // Button reset (the trigger is a <button> for keyboard access)
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
 
   .photo-expand-icon {
     position: absolute;
@@ -117,8 +129,15 @@
     pointer-events: none;
   }
 
-  &:hover .photo-expand-icon {
+  &:hover .photo-expand-icon,
+  &:focus-visible .photo-expand-icon {
     opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo-thumb .photo-expand-icon {
+    transition: none;
   }
 }
 

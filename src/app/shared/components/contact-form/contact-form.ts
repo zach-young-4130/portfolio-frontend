@@ -1,4 +1,13 @@
-import { Component, ChangeDetectionStrategy, DestroyRef, inject, signal } from '@angular/core';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  DestroyRef,
+  ElementRef,
+  PLATFORM_ID,
+  inject,
+  signal,
+} from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ContactService } from '../../../core/services/contact.service';
@@ -15,6 +24,8 @@ export class ContactFormComponent {
   private fb = inject(FormBuilder);
   private contactService = inject(ContactService);
   private destroyRef = inject(DestroyRef);
+  private host = inject(ElementRef);
+  private platformId = inject(PLATFORM_ID);
 
   protected sent = signal(false);
   protected submitting = signal(false);
@@ -40,6 +51,12 @@ export class ContactFormComponent {
   protected submit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      if (isPlatformBrowser(this.platformId)) {
+        const firstInvalid = (this.host.nativeElement as HTMLElement).querySelector<HTMLElement>(
+          'input.ng-invalid, textarea.ng-invalid',
+        );
+        firstInvalid?.focus();
+      }
       return;
     }
     this.submitting.set(true);
@@ -53,13 +70,13 @@ export class ContactFormComponent {
           this.submitting.set(false);
           this.form.reset();
           if (this.hideSentTimeout) clearTimeout(this.hideSentTimeout);
-          this.hideSentTimeout = setTimeout(() => this.sent.set(false), 30_000);
+          this.hideSentTimeout = setTimeout(() => this.sent.set(false), 7_000);
         },
         error: () => {
           this.errorMessage.set('We could not send your message. Please try again.');
           this.submitting.set(false);
           if (this.hideErrorTimeout) clearTimeout(this.hideErrorTimeout);
-          this.hideErrorTimeout = setTimeout(() => this.errorMessage.set(null), 30_000);
+          this.hideErrorTimeout = setTimeout(() => this.errorMessage.set(null), 7_000);
         },
       });
   }

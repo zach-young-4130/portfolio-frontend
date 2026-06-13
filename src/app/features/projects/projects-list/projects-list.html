@@ -1,6 +1,7 @@
 <app-page-hero title="Projects" subtitle="Things I've built or have been a part of building." image="projects-hero.jpg" />
 
 <section class="container py-5">
+  <h2 class="visually-hidden">All projects</h2>
 
   <div class="search-bar mb-5">
     <label for="project-search" class="visually-hidden">Search projects</label>
@@ -38,9 +39,9 @@
   @if (loading()) {
     <p role="status" class="text-center">Loading projects&hellip;</p>
   } @else if (projects().length === 0 && query()) {
-    <p class="text-center text-muted">No projects matched &ldquo;{{ query() }}&rdquo;.</p>
+    <p role="status" class="text-center text-muted">No projects matched &ldquo;{{ query() }}&rdquo;.</p>
   } @else if (projects().length === 0) {
-    <p class="text-center text-muted">No projects yet.</p>
+    <p role="status" class="text-center text-muted">No projects yet.</p>
   } @else {
     <div class="row g-4">
       @for (project of projects(); track project.id) {

@@ -6,9 +6,12 @@
     [attr.aria-label]="'Image: ' + alt()"
     (click)="close()"
     (keydown.escape)="close()"
-    tabindex="0"
+    (keydown.tab)="trapFocus($event)"
+    (keydown.shift.tab)="trapFocus($event)"
+    tabindex="-1"
   >
     <button
+      #closeBtn
       type="button"
       class="lightbox-close"
       aria-label="Close image"

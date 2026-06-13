@@ -1,12 +1,13 @@
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { PageHeroComponent } from '../../shared/components/page-hero/page-hero';
 import { CodeSnippetComponent } from './code-snippet/code-snippet';
+import { CodeSectionComponent } from './code-section/code-section';
 import { SeoService } from '../../core/services/seo.service';
 
 @Component({
   selector: 'app-code',
   standalone: true,
-  imports: [PageHeroComponent, CodeSnippetComponent],
+  imports: [PageHeroComponent, CodeSnippetComponent, CodeSectionComponent],
   templateUrl: './code.html',
   styleUrl: './code.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

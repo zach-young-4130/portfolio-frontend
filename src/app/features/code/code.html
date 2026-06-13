@@ -12,6 +12,8 @@
     and Angular is left out; everything here has a reason behind it.
   </p>
 
+  <h2 class="section-title mb-4">Codebase Structure</h2>
+
   <app-code-snippet label="Frontend structure" variant="tree">
   <h3 class="h5">Front-end (Angular 21 + SSR)</h3>
   <p class="text-secondary">
@@ -36,7 +38,8 @@
 │   │   │   │   ├── footer/
 │   │   │   │   ├── project-card/
 │   │   │   │   ├── page-hero/               # reused across all sub-pages
-│   │   │   │   └── contact-form/
+│   │   │   │   ├── contact-form/
+│   │   │   │   └── lightbox/                 # accessible dialog w/ focus trap
 │   │   │   └── directives/
 │   │   │       └── parallax.directive.ts    # SSR-safe scroll parallax
 │   │   ├── features/                # lazy-loaded route bundles
@@ -85,13 +88,14 @@
 │   │   │   └── authentication.rb            # current_user, authenticate!, issue_token
 │   │   └── api/v1/
 │   │       ├── base_controller.rb           # render_success / render_error / authorize_admin!
-│   │       ├── sessions_controller.rb       # password + Google login, lockout logic
+│   │       ├── sessions_controller.rb       # password login (lockout logic in User model)
 │   │       ├── projects_controller.rb       # includes(:technologies, :tags) on every read
 │   │       ├── technologies_controller.rb
 │   │       ├── tags_controller.rb
 │   │       ├── faq_items_controller.rb
 │   │       ├── community_items_controller.rb
-│   │       └── contact_messages_controller.rb
+│   │       ├── contact_messages_controller.rb
+│   │       └── page_views_controller.rb     # anonymized page-view tracking
 │   ├── blueprints/                          # Blueprinter serializers
 │   │   ├── project_blueprint.rb             # association :technologies + :tags
 │   │   ├── technology_blueprint.rb
@@ -99,10 +103,11 @@
 │   │   ├── community_item_blueprint.rb      # association :tags
 │   │   ├── faq_item_blueprint.rb
 │   │   ├── contact_message_blueprint.rb
+│   │   ├── page_view_blueprint.rb
 │   │   └── user_blueprint.rb
 │   ├── services/
 │   │   ├── json_web_token.rb                # HS256 encode/decode
-│   │   └── google_id_token_verifier.rb      # validates GIS tokens against Google's pubkeys
+│   │   └── service_result.rb                # shared Result object (ok / data / error)
 │   └── models/
 │       ├── user.rb                          # role, lockout columns, has_secure_password
 │       ├── project.rb                       # featured/published scopes, taggable, ordered techs
@@ -112,7 +117,8 @@
 │       ├── tag.rb
 │       ├── community_item.rb
 │       ├── faq_item.rb
-│       └── contact_message.rb
+│       ├── contact_message.rb
+│       └── page_view.rb                     # anonymized analytics events
 ├── config/
 │   ├── routes.rb                            # /api/v1 namespace
 │   └── initializers/
@@ -135,13 +141,10 @@
 
   <hr class="my-5" />
 
-  <!-- ============================================================ -->
-  <!-- Section: Authentication & Authorization                       -->
-  <!-- ============================================================ -->
-  <h2 class="h3 mb-2">Authentication &amp; Authorization</h2>
+  <app-code-section heading="Authentication &amp; Authorization">
   <p class="text-secondary mb-4">
-    Stateless JWTs, no cookies, two login surfaces (password + Google), and a
-    role split so non-admin users can exist without touching the CMS.
+    Stateless JWTs, no cookies, password login over a single session endpoint,
+    and a role split so non-admin users can exist without touching the CMS.
   </p>
 
   <app-code-snippet label="visible_scope_for helper">
@@ -293,10 +296,9 @@ def create
 end</code></pre>
   </app-code-snippet>
 
-  <!-- ============================================================ -->
-  <!-- Section: API Patterns                                         -->
-  <!-- ============================================================ -->
-  <h2 class="h3 mt-5 mb-2">API Patterns</h2>
+  </app-code-section>
+
+  <app-code-section heading="API Patterns">
   <p class="text-secondary mb-4">
     Tests double as OpenAPI docs. Strong params in the Rails 8 style. N+1s
     caught at the query layer, not discovered in production.
@@ -336,32 +338,6 @@ path "/api/v1/projects" do
     end
   end
 end</code></pre>
-  </app-code-snippet>
-
-  <app-code-snippet label="params.expect with association IDs">
-    <h3 class="h5">Rails 8 <code>params.expect</code> — accepting association ID arrays</h3>
-    <p class="text-secondary">
-      Rails 8 replaced <code>params.require.permit</code> with
-      <code>params.expect</code>, which raises on unexpected input rather
-      than silently dropping it. The non-obvious part is accepting
-      <code>technology_ids</code> and <code>tag_ids</code> as typed arrays
-      in the same call — the nested hash at the end of the array is the
-      Rails idiom for "these keys must be arrays." One API call atomically
-      replaces a project's M:M associations without a separate endpoint.
-    </p>
-<pre class="code-snippet"><code># app/controllers/api/v1/projects_controller.rb
-def project_params
-  params.expect(project: [
-    :title, :tagline, :description, :tech_stack,
-    :cover_image_url, :live_url, :repo_url,
-    :featured, :position, :published,
-    :project_start, :project_end,
-    {{ '{' }} technology_ids: [], tag_ids: [] {{ '}' }}
-  ])
-end
-
-# The frontend sends a flat payload — associations included
-# {{ '{' }} project: {{ '{' }} title: "…", technology_ids: [1, 3], tag_ids: [2] {{ '}' }} {{ '}' }}</code></pre>
   </app-code-snippet>
 
   <app-code-snippet label="N+1 prevention">
@@ -511,10 +487,9 @@ toObservable(this.query).pipe(
 {{ '}' }});</code></pre>
   </app-code-snippet>
 
-  <!-- ============================================================ -->
-  <!-- Section: Data Modeling                                        -->
-  <!-- ============================================================ -->
-  <h2 class="h3 mt-5 mb-2">Data Modeling</h2>
+  </app-code-section>
+
+  <app-code-section heading="Data Modeling">
   <p class="text-secondary mb-4">
     One polymorphic join table for tags. A position-scoped join for
     technologies. Frontend models that graduate from interfaces to classes
@@ -639,10 +614,9 @@ export class Project {{ '{' }}
 {{ '}' }}</code></pre>
   </app-code-snippet>
 
-  <!-- ============================================================ -->
-  <!-- Section: Accessibility                                        -->
-  <!-- ============================================================ -->
-  <h2 class="h3 mt-5 mb-2">Accessibility</h2>
+  </app-code-section>
+
+  <app-code-section heading="Accessibility">
   <p class="text-secondary mb-4">
     Accessibility is personal to me. I use a wheelchair, and both of my
     maternal grandparents were blind. I have a lived understanding of what it
@@ -665,7 +639,7 @@ export class Project {{ '{' }}
       ever appears.
     </p>
 <pre class="code-snippet"><code>&lt;!-- app.html --&gt;
-&lt;a class="visually-hidden-focusable" href="#main-content"&gt;Skip to main content&lt;/a&gt;
+&lt;a class="skip-link" href="#main-content"&gt;Skip to main content&lt;/a&gt;
 
 &lt;app-navbar /&gt;
 
@@ -694,7 +668,7 @@ export class Project {{ '{' }}
 <pre class="code-snippet"><code>&lt;!-- Theme toggle — icon-only, labeled on the button --&gt;
 &lt;button
   type="button"
-  [attr.aria-label]="'Switch to ' + (isDark() ? 'light' : 'dark') + ' mode'"
+  [attr.aria-label]="theme.theme() === 'light' ? 'Switch to dark theme' : 'Switch to light theme'"
 &gt;
   &lt;svg aria-hidden="true"&gt;&hellip;&lt;/svg&gt;
 &lt;/button&gt;
@@ -702,7 +676,7 @@ export class Project {{ '{' }}
 &lt;!-- Per-row admin action — row identifier in the label --&gt;
 &lt;button
   type="button"
-  [attr.aria-label]="'Delete ' + technology.name"
+  [attr.aria-label]="'Delete ' + tech.name"
 &gt;Delete&lt;/button&gt;</code></pre>
   </app-code-snippet>
 
@@ -770,38 +744,40 @@ export class Project {{ '{' }}
   <app-code-snippet label="dialog / lightbox">
     <h3 class="h5">Dialog / lightbox — <code>role</code>, <code>aria-modal</code>, keyboard dismiss</h3>
     <p class="text-secondary">
-      The photo lightbox uses <code>role="dialog"</code> and
-      <code>aria-modal="true"</code> so screen readers know content behind
-      it is inert. <code>aria-label</code> is derived from the image's own
-      alt text — no separate label needed. <code>tabindex="0"</code> makes
-      the overlay focusable so <code>(keydown.escape)</code> fires reliably
-      from keyboard. Clicking the image itself calls
-      <code>stopPropagation()</code> so users inspecting the photo don't
-      accidentally close it.
+      The photo lightbox is a reusable <code>role="dialog"</code> /
+      <code>aria-modal="true"</code> component. On open it moves focus into the
+      dialog (the close button) and remembers the trigger; on close it returns
+      focus there, so keyboard users never lose their place.
+      <code>(keydown.escape)</code> dismisses, and
+      <code>(keydown.tab)</code> / <code>(keydown.shift.tab)</code> are trapped to
+      the single close button so focus can't escape to the inert content behind
+      the modal. The overlay is <code>tabindex="-1"</code> — programmatically
+      focusable, but not a tab stop. Clicking the image calls
+      <code>stopPropagation()</code> so inspecting the photo doesn't close it.
     </p>
-<pre class="code-snippet"><code>&#64;if (lightboxSrc()) {{ '{' }}
+<pre class="code-snippet"><code>&#64;if (src(); as currentSrc) {{ '{' }}
   &lt;div
     class="lightbox-overlay"
     role="dialog"
     aria-modal="true"
-    [attr.aria-label]="'Photo: ' + lightboxAlt()"
-    (click)="closeLightbox()"
-    (keydown.escape)="closeLightbox()"
-    tabindex="0"
+    [attr.aria-label]="'Image: ' + alt()"
+    (click)="close()"
+    (keydown.escape)="close()"
+    (keydown.tab)="trapFocus($event)"
+    (keydown.shift.tab)="trapFocus($event)"
+    tabindex="-1"
   &gt;
-    &lt;button type="button" aria-label="Close photo" (click)="closeLightbox()"&gt;
+    &lt;button #closeBtn type="button" aria-label="Close image" (click)="close()"&gt;
       &lt;svg aria-hidden="true"&gt;&hellip;&lt;/svg&gt;
     &lt;/button&gt;
-    &lt;img [src]="lightboxSrc()" [alt]="lightboxAlt()"
-         (click)="$event.stopPropagation()" /&gt;
+    &lt;img [src]="currentSrc" [alt]="alt()" (click)="$event.stopPropagation()" /&gt;
   &lt;/div&gt;
 {{ '}' }}</code></pre>
   </app-code-snippet>
 
-  <!-- ============================================================ -->
-  <!-- Section: SEO                                                  -->
-  <!-- ============================================================ -->
-  <h2 class="h3 mt-5 mb-2">SEO</h2>
+  </app-code-section>
+
+  <app-code-section heading="SEO">
   <p class="text-secondary mb-4">
     Most companies and founders care deeply about search visibility. Every
     page on this site sets its own title, description, Open Graph, and
@@ -831,7 +807,7 @@ export class SeoService {{ '{' }}
 
   set(config: {{ '{' }} title: string; description: string; image?: string; jsonLd?: object {{ '}' }}): void {{ '{' }}
     const fullTitle = `${{ '$' }}{{ '{' }}config.title{{ '}' }} | Zach Young`;
-    const url       = `https://zachyoung.com${{ '$' }}{{ '{' }}this.router.url.split('?')[0]{{ '}' }}`;
+    const url       = `{{ '$' }}{{ '{' }}environment.siteUrl{{ '}' }}{{ '$' }}{{ '{' }}this.router.url.split('?')[0]{{ '}' }}`;
 
     this.titleService.setTitle(fullTitle);
 
@@ -881,8 +857,8 @@ export class ProjectsListComponent {{ '{' }}
   "@type": "Person",
   "name": "Zach Young",
   "jobTitle": "Senior Full-Stack Software Engineer",
-  "url": "https://zachyoung.com",
-  "image": "https://zachyoung.com/profile.png",
+  "url": "https://zachyoung.org",
+  "image": "https://zachyoung.org/profile.png",
   "address": {{ '{' }}
     "@type": "PostalAddress",
     "addressLocality": "Cape Girardeau",
@@ -907,10 +883,9 @@ private setJsonLd(data: object): void {{ '{' }}
 {{ '}' }}</code></pre>
   </app-code-snippet>
 
-  <!-- ============================================================ -->
-  <!-- Section: Frontend Patterns                                    -->
-  <!-- ============================================================ -->
-  <h2 class="h3 mt-5 mb-2">Frontend Patterns</h2>
+  </app-code-section>
+
+  <app-code-section heading="Frontend Patterns">
   <p class="text-secondary mb-4">
     Signals for state, <code>afterNextRender</code> for browser-only setup,
     CSS custom properties for theming so not a single style recalc in JS is
@@ -951,17 +926,18 @@ private setJsonLd(data: object): void {{ '{' }}
     </p>
 <pre class="code-snippet"><code>// styles.scss
 :root, .theme-light {{ '{' }}
-  --bg:         #ffffff;
-  --bg-surface: #e9ecef;
-  --fg:         #111111;
-  --accent:     #4b9cd3;
+  --bg:          #ffffff;
+  --bg-surface:  #f4f4f5;
+  --fg:          #0a0a0a;
+  --accent:      #1366d6;   // accessible royal-Carolina blue
+  --accent-bright: #4b9cd3; // Carolina, for large fills
 {{ '}' }}
 
 .theme-dark {{ '{' }}
-  --bg:         #18181b;
-  --bg-surface: #27272a;
-  --fg:         #fafafa;
-  --accent:     #4b9cd3;
+  --bg:          #0a0a0a;
+  --bg-surface:  #161618;
+  --fg:          #fafafa;
+  --accent:      #5aa9e0;   // brighter Carolina for dark canvas
 {{ '}' }}
 
 // any component — zero JS involvement at toggle time
@@ -1002,47 +978,49 @@ export class ParallaxDirective {{ '{' }}
   </app-code-snippet>
 
   <app-code-snippet label="signal-driven lightbox">
-    <h3 class="h5">Lightbox — <code>signal&lt;string | null&gt;</code> with no modal library</h3>
+    <h3 class="h5">Lightbox — a reusable, signal-driven dialog with real focus management</h3>
     <p class="text-secondary">
-      A <code>signal&lt;string | null&gt;</code> is the entire state machine.
-      <code>null</code> means closed; a URL means open — no boolean flag, no
-      separate alt signal needed at the call site. The overlay renders with
-      <code>&#64;if</code> so it's absent from the DOM entirely when closed, not
-      just hidden. Clicking the backdrop closes; clicking the image calls
-      <code>stopPropagation()</code> so it doesn't. The <code>tabindex="0"</code>
-      and <code>(keydown.escape)</code> binding make it keyboard-dismissible
-      without a focus-trap library.
+      A <code>signal&lt;string | null&gt;</code> is the entire state machine —
+      <code>null</code> means closed, a URL means open. The whole thing is
+      extracted into a reusable <code>LightboxComponent</code>: any page drops
+      <code>&lt;app-lightbox #lightbox /&gt;</code> and calls
+      <code>lightbox.open(src, alt)</code> from a real <code>&lt;button&gt;</code>
+      trigger (keyboard-accessible, with its own <code>aria-label</code>; the
+      image is decorative <code>alt=""</code>). The overlay renders with
+      <code>&#64;if</code> so it's absent from the DOM when closed. On open the
+      component remembers the trigger and moves focus to the close button; on
+      close it restores focus — and a single-control <code>trapFocus</code> keeps
+      Tab inside the dialog. Real focus management, no modal library.
     </p>
-<pre class="code-snippet"><code>// about.ts
-protected lightboxSrc = signal&lt;string | null&gt;(null);
-protected lightboxAlt = signal&lt;string&gt;('');
+<pre class="code-snippet"><code>// shared/components/lightbox/lightbox.ts — reusable, self-contained
+protected readonly src = signal&lt;string | null&gt;(null);   // null = closed
+protected readonly alt = signal&lt;string&gt;('');
+private returnFocusEl: HTMLElement | null = null;
 
-protected openLightbox(src: string, alt: string): void {{ '{' }}
-  this.lightboxSrc.set(src);
-  this.lightboxAlt.set(alt);
+open(src: string, alt: string): void {{ '{' }}
+  this.returnFocusEl = document.activeElement as HTMLElement | null;
+  this.src.set(src);
+  this.alt.set(alt);
+  setTimeout(() =&gt; this.closeBtn()?.nativeElement.focus());  // focus into dialog
 {{ '}' }}
 
-protected closeLightbox(): void {{ '{' }}
-  this.lightboxSrc.set(null);
+close(): void {{ '{' }}
+  this.src.set(null);
+  this.returnFocusEl?.focus();                              // restore focus
 {{ '}' }}
 
-// about.html — trigger on any image
-&lt;div class="photo-thumb" (click)="openLightbox('/profile.png', 'Zach Young')"&gt;
-  &lt;img src="/profile.png" alt="Zach Young" class="profile-photo" /&gt;
-  &lt;span class="photo-expand-icon" aria-hidden="true"&gt;&lt;!-- expand SVG --&gt;&lt;/span&gt;
-&lt;/div&gt;
+trapFocus(e: Event): void {{ '{' }}                         // single-control trap
+  e.preventDefault();
+  this.closeBtn()?.nativeElement.focus();
+{{ '}' }}
 
-// overlay — absent from DOM when closed, not just hidden
-&#64;if (lightboxSrc()) {{ '{' }}
-  &lt;div class="lightbox-overlay"
-       role="dialog" aria-modal="true"
-       (click)="closeLightbox()"
-       (keydown.escape)="closeLightbox()"
-       tabindex="0"&gt;
-    &lt;img [src]="lightboxSrc()" [alt]="lightboxAlt()"
-         (click)="$event.stopPropagation()" /&gt;
-  &lt;/div&gt;
-{{ '}' }}</code></pre>
+// any page — keyboard-accessible trigger + the shared component
+&lt;button class="photo-thumb" aria-label="Enlarge photo of Zach Young"
+        (click)="lightbox.open('/profile.png', 'Zach Young')"&gt;
+  &lt;img src="/profile.png" alt="" class="profile-photo" /&gt;
+&lt;/button&gt;
+&lt;app-lightbox #lightbox /&gt;</code></pre>
   </app-code-snippet>
+  </app-code-section>
 
 </section>
