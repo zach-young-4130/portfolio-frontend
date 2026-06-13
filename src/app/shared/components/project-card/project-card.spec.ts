@@ -8,6 +8,7 @@ const project = new Project({
   title: 'Awesome',
   tagline: 'A nice tagline',
   description: 'Some description',
+  highlights: null,
   tech_stack: 'Rails, Angular',
   cover_image_url: null,
   live_url: 'https://example.com',
@@ -17,6 +18,8 @@ const project = new Project({
   published: true,
   project_start: '2024-06-01',
   project_end: '2024-12-15',
+  technologies: [],
+  tags: [],
 });
 
 describe('ProjectCardComponent', () => {

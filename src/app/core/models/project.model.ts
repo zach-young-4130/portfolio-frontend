@@ -6,6 +6,7 @@ export interface ProjectData {
   title: string;
   tagline: string;
   description: string;
+  highlights: string | null;
   tech_stack: string;
   cover_image_url: string | null;
   live_url: string | null;
@@ -24,6 +25,8 @@ export class Project {
   readonly title: string;
   readonly tagline: string;
   readonly description: string;
+  readonly highlights: string | null;
+  readonly highlightList: string[];
   readonly tech_stack: string;
   readonly cover_image_url: string | null;
   readonly live_url: string | null;
@@ -34,6 +37,7 @@ export class Project {
   readonly project_start: string | null;
   readonly project_end: string | null;
   readonly time_ago: string;
+  readonly timeline: string;
   readonly technologies: Technology[];
   readonly tags: Tag[];
 
@@ -42,6 +46,8 @@ export class Project {
     this.title = data.title;
     this.tagline = data.tagline;
     this.description = data.description;
+    this.highlights = data.highlights ?? null;
+    this.highlightList = Project.parseHighlights(data.highlights);
     this.tech_stack = data.tech_stack;
     this.cover_image_url = data.cover_image_url;
     this.live_url = data.live_url;
@@ -52,8 +58,33 @@ export class Project {
     this.project_start = data.project_start;
     this.project_end = data.project_end;
     this.time_ago = Project.computeTimeAgo(now, data.project_end);
+    this.timeline = Project.computeTimeline(data.project_start, data.project_end);
     this.technologies = data.technologies ?? [];
     this.tags = data.tags ?? [];
+  }
+
+  // Splits the newline-separated highlights string into trimmed, non-empty lines.
+  private static parseHighlights(highlights: string | null): string[] {
+    if (!highlights) return [];
+    return highlights
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+  }
+
+  // Renders a compact "start – end" year range, with "Present" for ongoing work.
+  private static computeTimeline(start: string | null, end: string | null): string {
+    // Use UTC: the API sends date-only strings (YYYY-MM-DD) which parse as UTC
+    // midnight; getFullYear() would shift to the prior year in negative-offset
+    // timezones.
+    const startYear = start ? new Date(start).getUTCFullYear() : null;
+    const endYear = end ? new Date(end).getUTCFullYear() : null;
+    if (startYear && endYear) {
+      return startYear === endYear ? `${startYear}` : `${startYear} – ${endYear}`;
+    }
+    if (startYear) return `${startYear} – Present`;
+    if (endYear) return `${endYear}`;
+    return '';
   }
 
   private static computeTimeAgo(now: Date, project_end: string | null): string {

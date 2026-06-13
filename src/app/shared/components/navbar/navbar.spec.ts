@@ -27,8 +27,9 @@ describe('NavbarComponent', () => {
     const links = Array.from(fixture.nativeElement.querySelectorAll('a.nav-link')) as HTMLAnchorElement[];
     const labels = links.map((a) => a.textContent?.trim());
     expect(labels).toContain('Projects');
+    expect(labels).toContain('Stack');
+    expect(labels).toContain('Code');
     expect(labels).toContain('FAQ');
-    expect(labels).toContain('Community');
     expect(labels).toContain('Contact');
   });
 });

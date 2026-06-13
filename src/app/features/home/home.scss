@@ -138,3 +138,24 @@
 .home-contact__meta {
   margin-top: 1.5rem;
 }
+
+// ── Closing CTA ───────────────────────────────────────────────────────────────
+.home-cta__lead {
+  font-size: clamp(1.15rem, 2vw, 1.6rem);
+  line-height: 1.4;
+  color: var(--fg);
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-weight: 500;
+  max-width: 32ch;
+  margin-bottom: 0;
+}
+
+.home-cta__actions {
+  justify-content: flex-start;
+}
+
+@media (min-width: 992px) {
+  .home-cta__actions {
+    justify-content: flex-end;
+  }
+}

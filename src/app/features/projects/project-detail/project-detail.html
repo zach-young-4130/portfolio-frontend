@@ -10,12 +10,24 @@
     <header class="project-header mt-3 mb-4 mb-lg-5">
       <h1 class="display-5 fw-bold mb-2">{{ p.title }}</h1>
       <p class="lead text-muted mb-0">{{ p.tagline }}</p>
+      @if (p.timeline) {
+        <p class="label-mono project-timeline mt-2 mb-0">{{ p.timeline }}</p>
+      }
     </header>
 
     <div class="row g-4 g-lg-5">
       <div class="col-lg-7 order-2 order-lg-1">
         <h2 class="h5">About this project</h2>
         <p class="project-description">{{ p.description }}</p>
+
+        @if (p.highlightList.length > 0) {
+          <h3 class="h6 text-uppercase text-muted project-highlights__heading">Highlights</h3>
+          <ul class="project-highlights">
+            @for (item of p.highlightList; track item) {
+              <li>{{ item }}</li>
+            }
+          </ul>
+        }
 
         <div class="d-flex flex-wrap gap-3 mt-4">
           @if (p.live_url) {
@@ -54,7 +66,7 @@
           <ul class="list-inline mb-3" aria-label="Technologies">
             @for (tech of p.technologies; track tech.id) {
               <li class="list-inline-item">
-                <span class="badge tech-badge">{{ tech.name }}</span>
+                <app-tech-badge [tech]="tech" />
               </li>
             }
           </ul>

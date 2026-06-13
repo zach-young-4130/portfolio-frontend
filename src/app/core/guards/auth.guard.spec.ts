@@ -23,7 +23,7 @@ describe('authGuard', () => {
 
   it('returns true when authenticated', () => {
     const auth = TestBed.inject(AuthService);
-    auth.currentUser.set({ id: 1, email: 'a@b.com' });
+    auth.currentUser.set({ id: 1, email: 'a@b.com', name: null, avatar_url: null, role: 'admin' });
     const result = TestBed.runInInjectionContext(() => authGuard({} as never, {} as never));
     expect(result).toBe(true);
   });

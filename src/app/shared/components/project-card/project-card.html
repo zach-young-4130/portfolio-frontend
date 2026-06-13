@@ -24,7 +24,7 @@
       <ul class="list-inline mb-2 tech-stack" aria-label="Technologies">
         @for (tech of p.technologies; track tech.id) {
           <li class="list-inline-item">
-            <span class="badge tech-badge">{{ tech.name }}</span>
+            <app-tech-badge [tech]="tech" />
           </li>
         }
       </ul>

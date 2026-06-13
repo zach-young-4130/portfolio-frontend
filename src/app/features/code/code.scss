@@ -37,3 +37,17 @@ hr {
   border-color: var(--border);
   opacity: 1;
 }
+
+// Top-level group divider (Backend / Frontend) — a heavier rule than the
+// per-section headings so the two halves of the stack read at a glance.
+.code-band {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+  margin: 3.5rem 0 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 2px solid var(--rule);
+  color: var(--fg);
+}

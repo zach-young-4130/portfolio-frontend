@@ -4,11 +4,12 @@ import { RouterLink } from '@angular/router';
 import { ProjectsService } from '../../../core/services/projects.service';
 import { Project } from '../../../core/models/project.model';
 import { LightboxComponent } from '../../../shared/components/lightbox/lightbox';
+import { TechBadgeComponent } from '../../../shared/components/tech-badge/tech-badge';
 
 @Component({
   selector: 'app-project-detail',
   standalone: true,
-  imports: [RouterLink, LightboxComponent],
+  imports: [RouterLink, LightboxComponent, TechBadgeComponent],
   templateUrl: './project-detail.html',
   styleUrl: './project-detail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

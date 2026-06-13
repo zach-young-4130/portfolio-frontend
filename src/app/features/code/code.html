@@ -141,6 +141,168 @@
 
   <hr class="my-5" />
 
+  <app-code-section heading="Accessibility">
+  <p class="text-secondary mb-4">
+    Accessibility is personal to me. I use a wheelchair, and both of my
+    maternal grandparents were blind. I have a lived understanding of what it
+    means to rely on assistive technology — and that shapes how I build.
+    Screen readers are first-class users of this site. Every interactive
+    control has an accessible name, every landmark is in place, and ARIA is
+    used where semantic HTML alone isn't enough — not as a substitute for it.
+  </p>
+
+  <app-code-snippet label="skip link + landmarks">
+    <h3 class="h5">Skip link + landmark structure</h3>
+    <p class="text-secondary">
+      A visually hidden skip link is the first focusable element on every
+      page — keyboard and screen reader users can bypass the nav and jump
+      straight to content. The page shell uses semantic landmarks
+      (<code>&lt;nav&gt;</code>, <code>&lt;main&gt;</code>,
+      <code>&lt;footer&gt;</code>) so screen reader users can jump between
+      regions without navigating every link. The nav carries
+      <code>aria-label="Primary"</code> to distinguish it if a second nav
+      ever appears.
+    </p>
+<pre class="code-snippet"><code>&lt;!-- app.html --&gt;
+&lt;a class="skip-link" href="#main-content"&gt;Skip to main content&lt;/a&gt;
+
+&lt;app-navbar /&gt;
+
+&lt;main id="main-content"&gt;
+  &lt;router-outlet /&gt;
+&lt;/main&gt;
+
+&lt;app-footer /&gt;
+
+&lt;!-- navbar.html --&gt;
+&lt;nav aria-label="Primary" class="navbar navbar-expand-lg"&gt;
+  &hellip;
+&lt;/nav&gt;</code></pre>
+  </app-code-snippet>
+
+  <app-code-snippet label="icon-only buttons">
+    <h3 class="h5">Icon-only controls — <code>aria-label</code> + <code>aria-hidden</code> on the SVG</h3>
+    <p class="text-secondary">
+      Any button or link whose visible content is only an SVG needs an
+      <code>aria-label</code> on the control itself. The SVG inside gets
+      <code>aria-hidden="true"</code> so screen readers don't announce it
+      separately — without that, VoiceOver reads the raw path data.
+      Per-row actions carry the row identifier in their label so a screen
+      reader user hears "Delete Ruby on Rails", not an ambiguous "Delete".
+    </p>
+<pre class="code-snippet"><code>&lt;!-- Theme toggle — icon-only, labeled on the button --&gt;
+&lt;button
+  type="button"
+  [attr.aria-label]="theme.theme() === 'light' ? 'Switch to dark theme' : 'Switch to light theme'"
+&gt;
+  &lt;svg aria-hidden="true"&gt;&hellip;&lt;/svg&gt;
+&lt;/button&gt;
+
+&lt;!-- Per-row admin action — row identifier in the label --&gt;
+&lt;button
+  type="button"
+  [attr.aria-label]="'Delete ' + tech.name"
+&gt;Delete&lt;/button&gt;</code></pre>
+  </app-code-snippet>
+
+  <app-code-snippet label="table accessibility">
+    <h3 class="h5">Table accessibility — caption, <code>scope</code>, labeled row actions</h3>
+    <p class="text-secondary">
+      Every data table has either a visible <code>&lt;caption&gt;</code> or a
+      <code>visually-hidden</code> one — never just <code>aria-label</code>
+      on the <code>&lt;table&gt;</code> element, because that bypasses the
+      caption slot screen readers announce before reading headers. Column
+      headers carry <code>scope="col"</code>; row headers carry
+      <code>scope="row"</code>. This gives screen readers the full header
+      association for every cell without a complex ARIA grid.
+    </p>
+<pre class="code-snippet"><code>&lt;table class="table align-middle"&gt;
+  &lt;caption class="visually-hidden"&gt;All technologies available for projects.&lt;/caption&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th scope="col"&gt;Name&lt;/th&gt;
+      &lt;th scope="col"&gt;Category&lt;/th&gt;
+      &lt;th scope="col" class="text-end"&gt;Actions&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;th scope="row" class="fw-normal"&gt;{{ '{' }}{{ '{' }} technology.name {{ '}' }}{{ '}' }}&lt;/th&gt;
+      &lt;td&gt;{{ '{' }}{{ '{' }} technology.category {{ '}' }}{{ '}' }}&lt;/td&gt;
+      &lt;td class="text-end"&gt;
+        &lt;button [attr.aria-label]="'Edit ' + technology.name"&gt;Edit&lt;/button&gt;
+        &lt;button [attr.aria-label]="'Delete ' + technology.name"&gt;Delete&lt;/button&gt;
+      &lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;</code></pre>
+  </app-code-snippet>
+
+  <app-code-snippet label="expand button pattern">
+    <h3 class="h5">Expand/collapse — <code>aria-expanded</code> + <code>aria-controls</code></h3>
+    <p class="text-secondary">
+      The code snippet toggle buttons on this very page demonstrate the
+      disclosure pattern. <code>aria-expanded</code> reflects current state
+      so screen readers announce "collapsed" or "expanded" without any visual
+      cue. <code>aria-controls</code> points to the panel ID so assistive
+      technology can navigate directly to the revealed content.
+      <code>aria-label</code> on the button incorporates the snippet name so
+      repeated "Show code" buttons are distinguishable in a landmarks list.
+    </p>
+<pre class="code-snippet"><code>&lt;button
+  type="button"
+  [attr.aria-expanded]="expanded()"
+  [attr.aria-controls]="bodyId"
+  [attr.aria-label]="(expanded() ? 'Hide code for ' : 'Show code for ') + label()"
+  (click)="toggle()"
+&gt;
+  {{ '{' }}{{ '{' }} expanded() ? '&lt;code&gt;' : '&lt;code/&gt;' {{ '}' }}{{ '}' }}
+&lt;/button&gt;
+
+&#64;if (expanded()) {{ '{' }}
+  &lt;div [id]="bodyId"&gt;
+    &lt;ng-content select="pre" /&gt;
+  &lt;/div&gt;
+{{ '}' }}</code></pre>
+  </app-code-snippet>
+
+  <app-code-snippet label="dialog / lightbox">
+    <h3 class="h5">Dialog / lightbox — <code>role</code>, <code>aria-modal</code>, keyboard dismiss</h3>
+    <p class="text-secondary">
+      The photo lightbox is a reusable <code>role="dialog"</code> /
+      <code>aria-modal="true"</code> component. On open it moves focus into the
+      dialog (the close button) and remembers the trigger; on close it returns
+      focus there, so keyboard users never lose their place.
+      <code>(keydown.escape)</code> dismisses, and
+      <code>(keydown.tab)</code> / <code>(keydown.shift.tab)</code> are trapped to
+      the single close button so focus can't escape to the inert content behind
+      the modal. The overlay is <code>tabindex="-1"</code> — programmatically
+      focusable, but not a tab stop. Clicking the image calls
+      <code>stopPropagation()</code> so inspecting the photo doesn't close it.
+    </p>
+<pre class="code-snippet"><code>&#64;if (src(); as currentSrc) {{ '{' }}
+  &lt;div
+    class="lightbox-overlay"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="'Image: ' + alt()"
+    (click)="close()"
+    (keydown.escape)="close()"
+    (keydown.tab)="trapFocus($event)"
+    (keydown.shift.tab)="trapFocus($event)"
+    tabindex="-1"
+  &gt;
+    &lt;button #closeBtn type="button" aria-label="Close image" (click)="close()"&gt;
+      &lt;svg aria-hidden="true"&gt;&hellip;&lt;/svg&gt;
+    &lt;/button&gt;
+    &lt;img [src]="currentSrc" [alt]="alt()" (click)="$event.stopPropagation()" /&gt;
+  &lt;/div&gt;
+{{ '}' }}</code></pre>
+  </app-code-snippet>
+
+  </app-code-section>
+  <h2 class="code-band">Backend</h2>
+
   <app-code-section heading="Authentication &amp; Authorization">
   <p class="text-secondary mb-4">
     Stateless JWTs, no cookies, password login over a single session endpoint,
@@ -297,7 +459,6 @@ end</code></pre>
   </app-code-snippet>
 
   </app-code-section>
-
   <app-code-section heading="API Patterns">
   <p class="text-secondary mb-4">
     Tests double as OpenAPI docs. Strong params in the Rails 8 style. N+1s
@@ -488,7 +649,6 @@ toObservable(this.query).pipe(
   </app-code-snippet>
 
   </app-code-section>
-
   <app-code-section heading="Data Modeling">
   <p class="text-secondary mb-4">
     One polymorphic join table for tags. A position-scoped join for
@@ -615,275 +775,7 @@ export class Project {{ '{' }}
   </app-code-snippet>
 
   </app-code-section>
-
-  <app-code-section heading="Accessibility">
-  <p class="text-secondary mb-4">
-    Accessibility is personal to me. I use a wheelchair, and both of my
-    maternal grandparents were blind. I have a lived understanding of what it
-    means to rely on assistive technology — and that shapes how I build.
-    Screen readers are first-class users of this site. Every interactive
-    control has an accessible name, every landmark is in place, and ARIA is
-    used where semantic HTML alone isn't enough — not as a substitute for it.
-  </p>
-
-  <app-code-snippet label="skip link + landmarks">
-    <h3 class="h5">Skip link + landmark structure</h3>
-    <p class="text-secondary">
-      A visually hidden skip link is the first focusable element on every
-      page — keyboard and screen reader users can bypass the nav and jump
-      straight to content. The page shell uses semantic landmarks
-      (<code>&lt;nav&gt;</code>, <code>&lt;main&gt;</code>,
-      <code>&lt;footer&gt;</code>) so screen reader users can jump between
-      regions without navigating every link. The nav carries
-      <code>aria-label="Primary"</code> to distinguish it if a second nav
-      ever appears.
-    </p>
-<pre class="code-snippet"><code>&lt;!-- app.html --&gt;
-&lt;a class="skip-link" href="#main-content"&gt;Skip to main content&lt;/a&gt;
-
-&lt;app-navbar /&gt;
-
-&lt;main id="main-content"&gt;
-  &lt;router-outlet /&gt;
-&lt;/main&gt;
-
-&lt;app-footer /&gt;
-
-&lt;!-- navbar.html --&gt;
-&lt;nav aria-label="Primary" class="navbar navbar-expand-lg"&gt;
-  &hellip;
-&lt;/nav&gt;</code></pre>
-  </app-code-snippet>
-
-  <app-code-snippet label="icon-only buttons">
-    <h3 class="h5">Icon-only controls — <code>aria-label</code> + <code>aria-hidden</code> on the SVG</h3>
-    <p class="text-secondary">
-      Any button or link whose visible content is only an SVG needs an
-      <code>aria-label</code> on the control itself. The SVG inside gets
-      <code>aria-hidden="true"</code> so screen readers don't announce it
-      separately — without that, VoiceOver reads the raw path data.
-      Per-row actions carry the row identifier in their label so a screen
-      reader user hears "Delete Ruby on Rails", not an ambiguous "Delete".
-    </p>
-<pre class="code-snippet"><code>&lt;!-- Theme toggle — icon-only, labeled on the button --&gt;
-&lt;button
-  type="button"
-  [attr.aria-label]="theme.theme() === 'light' ? 'Switch to dark theme' : 'Switch to light theme'"
-&gt;
-  &lt;svg aria-hidden="true"&gt;&hellip;&lt;/svg&gt;
-&lt;/button&gt;
-
-&lt;!-- Per-row admin action — row identifier in the label --&gt;
-&lt;button
-  type="button"
-  [attr.aria-label]="'Delete ' + tech.name"
-&gt;Delete&lt;/button&gt;</code></pre>
-  </app-code-snippet>
-
-  <app-code-snippet label="table accessibility">
-    <h3 class="h5">Table accessibility — caption, <code>scope</code>, labeled row actions</h3>
-    <p class="text-secondary">
-      Every data table has either a visible <code>&lt;caption&gt;</code> or a
-      <code>visually-hidden</code> one — never just <code>aria-label</code>
-      on the <code>&lt;table&gt;</code> element, because that bypasses the
-      caption slot screen readers announce before reading headers. Column
-      headers carry <code>scope="col"</code>; row headers carry
-      <code>scope="row"</code>. This gives screen readers the full header
-      association for every cell without a complex ARIA grid.
-    </p>
-<pre class="code-snippet"><code>&lt;table class="table align-middle"&gt;
-  &lt;caption class="visually-hidden"&gt;All technologies available for projects.&lt;/caption&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th scope="col"&gt;Name&lt;/th&gt;
-      &lt;th scope="col"&gt;Category&lt;/th&gt;
-      &lt;th scope="col" class="text-end"&gt;Actions&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;th scope="row" class="fw-normal"&gt;{{ '{' }}{{ '{' }} technology.name {{ '}' }}{{ '}' }}&lt;/th&gt;
-      &lt;td&gt;{{ '{' }}{{ '{' }} technology.category {{ '}' }}{{ '}' }}&lt;/td&gt;
-      &lt;td class="text-end"&gt;
-        &lt;button [attr.aria-label]="'Edit ' + technology.name"&gt;Edit&lt;/button&gt;
-        &lt;button [attr.aria-label]="'Delete ' + technology.name"&gt;Delete&lt;/button&gt;
-      &lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;</code></pre>
-  </app-code-snippet>
-
-  <app-code-snippet label="expand button pattern">
-    <h3 class="h5">Expand/collapse — <code>aria-expanded</code> + <code>aria-controls</code></h3>
-    <p class="text-secondary">
-      The code snippet toggle buttons on this very page demonstrate the
-      disclosure pattern. <code>aria-expanded</code> reflects current state
-      so screen readers announce "collapsed" or "expanded" without any visual
-      cue. <code>aria-controls</code> points to the panel ID so assistive
-      technology can navigate directly to the revealed content.
-      <code>aria-label</code> on the button incorporates the snippet name so
-      repeated "Show code" buttons are distinguishable in a landmarks list.
-    </p>
-<pre class="code-snippet"><code>&lt;button
-  type="button"
-  [attr.aria-expanded]="expanded()"
-  [attr.aria-controls]="bodyId"
-  [attr.aria-label]="(expanded() ? 'Hide code for ' : 'Show code for ') + label()"
-  (click)="toggle()"
-&gt;
-  {{ '{' }}{{ '{' }} expanded() ? '&lt;code&gt;' : '&lt;code/&gt;' {{ '}' }}{{ '}' }}
-&lt;/button&gt;
-
-&#64;if (expanded()) {{ '{' }}
-  &lt;div [id]="bodyId"&gt;
-    &lt;ng-content select="pre" /&gt;
-  &lt;/div&gt;
-{{ '}' }}</code></pre>
-  </app-code-snippet>
-
-  <app-code-snippet label="dialog / lightbox">
-    <h3 class="h5">Dialog / lightbox — <code>role</code>, <code>aria-modal</code>, keyboard dismiss</h3>
-    <p class="text-secondary">
-      The photo lightbox is a reusable <code>role="dialog"</code> /
-      <code>aria-modal="true"</code> component. On open it moves focus into the
-      dialog (the close button) and remembers the trigger; on close it returns
-      focus there, so keyboard users never lose their place.
-      <code>(keydown.escape)</code> dismisses, and
-      <code>(keydown.tab)</code> / <code>(keydown.shift.tab)</code> are trapped to
-      the single close button so focus can't escape to the inert content behind
-      the modal. The overlay is <code>tabindex="-1"</code> — programmatically
-      focusable, but not a tab stop. Clicking the image calls
-      <code>stopPropagation()</code> so inspecting the photo doesn't close it.
-    </p>
-<pre class="code-snippet"><code>&#64;if (src(); as currentSrc) {{ '{' }}
-  &lt;div
-    class="lightbox-overlay"
-    role="dialog"
-    aria-modal="true"
-    [attr.aria-label]="'Image: ' + alt()"
-    (click)="close()"
-    (keydown.escape)="close()"
-    (keydown.tab)="trapFocus($event)"
-    (keydown.shift.tab)="trapFocus($event)"
-    tabindex="-1"
-  &gt;
-    &lt;button #closeBtn type="button" aria-label="Close image" (click)="close()"&gt;
-      &lt;svg aria-hidden="true"&gt;&hellip;&lt;/svg&gt;
-    &lt;/button&gt;
-    &lt;img [src]="currentSrc" [alt]="alt()" (click)="$event.stopPropagation()" /&gt;
-  &lt;/div&gt;
-{{ '}' }}</code></pre>
-  </app-code-snippet>
-
-  </app-code-section>
-
-  <app-code-section heading="SEO">
-  <p class="text-secondary mb-4">
-    Most companies and founders care deeply about search visibility. Every
-    page on this site sets its own title, description, Open Graph, and
-    Twitter Card tags server-side — crawlers see the complete metadata before
-    JavaScript runs. JSON-LD structured data on the home page gives search
-    engines a machine-readable identity card for the site.
-  </p>
-
-  <app-code-snippet label="SeoService">
-    <h3 class="h5">SeoService — one call per page, server-side rendered</h3>
-    <p class="text-secondary">
-      Angular SSR runs the component constructor on the server, so
-      <code>Title.setTitle()</code> and <code>Meta.updateTag()</code> fire
-      before the HTML response leaves the server. Crawlers and social
-      previewers receive fully populated meta tags without executing
-      JavaScript. The service also writes a <code>&lt;link rel="canonical"&gt;</code>
-      using the current router URL so duplicate-content signals are never
-      sent to search engines.
-    </p>
-<pre class="code-snippet"><code>// core/services/seo.service.ts
-&#64;Injectable({{ '{' }} providedIn: 'root' {{ '}' }})
-export class SeoService {{ '{' }}
-  private titleService = inject(Title);
-  private meta         = inject(Meta);
-  private router       = inject(Router);
-  private doc          = inject(DOCUMENT);
-
-  set(config: {{ '{' }} title: string; description: string; image?: string; jsonLd?: object {{ '}' }}): void {{ '{' }}
-    const fullTitle = `${{ '$' }}{{ '{' }}config.title{{ '}' }} | Zach Young`;
-    const url       = `{{ '$' }}{{ '{' }}environment.siteUrl{{ '}' }}{{ '$' }}{{ '{' }}this.router.url.split('?')[0]{{ '}' }}`;
-
-    this.titleService.setTitle(fullTitle);
-
-    // Core — crawlers read these
-    this.meta.updateTag({{ '{' }} name: 'description',        content: config.description {{ '}' }});
-
-    // Open Graph — LinkedIn, Slack, iMessage previews
-    this.meta.updateTag({{ '{' }} property: 'og:title',       content: fullTitle {{ '}' }});
-    this.meta.updateTag({{ '{' }} property: 'og:description',  content: config.description {{ '}' }});
-    this.meta.updateTag({{ '{' }} property: 'og:url',          content: url {{ '}' }});
-    this.meta.updateTag({{ '{' }} property: 'og:image',        content: config.image ?? DEFAULT_IMAGE {{ '}' }});
-
-    // Twitter Card — X / Twitter link previews
-    this.meta.updateTag({{ '{' }} name: 'twitter:title',       content: fullTitle {{ '}' }});
-    this.meta.updateTag({{ '{' }} name: 'twitter:description', content: config.description {{ '}' }});
-
-    this.setCanonical(url);
-    config.jsonLd ? this.setJsonLd(config.jsonLd) : this.clearJsonLd();
-  {{ '}' }}
-{{ '}' }}
-
-// Every public page component — called in the constructor so SSR captures it
-export class ProjectsListComponent {{ '{' }}
-  constructor() {{ '{' }}
-    inject(SeoService).set({{ '{' }}
-      title:       'Projects',
-      description: 'Progressive web applications built with Ruby on Rails and Angular.',
-    {{ '}' }});
-  {{ '}' }}
-{{ '}' }}</code></pre>
-  </app-code-snippet>
-
-  <app-code-snippet label="JSON-LD structured data">
-    <h3 class="h5">JSON-LD — machine-readable identity for search engines</h3>
-    <p class="text-secondary">
-      The home page injects a <code>schema.org/Person</code> block into the
-      document <code>&lt;head&gt;</code> at SSR time. Google, Bing, and AI
-      overview engines parse this to understand who the site belongs to, what
-      they do, and where they are — independently of the visible page content.
-      The service manages the script tag lifecycle: it creates it on first
-      call, updates it on subsequent calls, and removes it when navigating to
-      a page that doesn't need structured data.
-    </p>
-<pre class="code-snippet"><code>// Injected via SeoService.set({{ '{' }} jsonLd: {{ '{' }} ... {{ '}' }} {{ '}' }}) in HomeComponent
-{{ '{' }}
-  "@context": "https://schema.org",
-  "@type": "Person",
-  "name": "Zach Young",
-  "jobTitle": "Senior Full-Stack Software Engineer",
-  "url": "https://zachyoung.org",
-  "image": "https://zachyoung.org/profile.png",
-  "address": {{ '{' }}
-    "@type": "PostalAddress",
-    "addressLocality": "Cape Girardeau",
-    "addressRegion": "MO",
-    "addressCountry": "US"
-  {{ '}' }},
-  "knowsAbout": ["Ruby on Rails", "Angular", "TypeScript", "Hotwire", "PostgreSQL"],
-  "award": ["2× National Champion — Paratriathlon", "3rd — ITU World Championship"]
-{{ '}' }}
-
-// SeoService writes and manages the script tag
-private setJsonLd(data: object): void {{ '{' }}
-  const id = 'json-ld-schema';
-  let script = this.doc.getElementById(id) as HTMLScriptElement | null;
-  if (!script) {{ '{' }}
-    script = this.doc.createElement('script');
-    script.id   = id;
-    script.type = 'application/ld+json';
-    this.doc.head.appendChild(script);
-  {{ '}' }}
-  script.text = JSON.stringify(data);
-{{ '}' }}</code></pre>
-  </app-code-snippet>
-
-  </app-code-section>
+  <h2 class="code-band">Frontend</h2>
 
   <app-code-section heading="Frontend Patterns">
   <p class="text-secondary mb-4">
@@ -1021,6 +913,113 @@ trapFocus(e: Event): void {{ '{' }}                         // single-control tr
 &lt;/button&gt;
 &lt;app-lightbox #lightbox /&gt;</code></pre>
   </app-code-snippet>
+  </app-code-section>
+  <app-code-section heading="SEO">
+  <p class="text-secondary mb-4">
+    Most companies and founders care deeply about search visibility. Every
+    page on this site sets its own title, description, Open Graph, and
+    Twitter Card tags server-side — crawlers see the complete metadata before
+    JavaScript runs. JSON-LD structured data on the home page gives search
+    engines a machine-readable identity card for the site.
+  </p>
+
+  <app-code-snippet label="SeoService">
+    <h3 class="h5">SeoService — one call per page, server-side rendered</h3>
+    <p class="text-secondary">
+      Angular SSR runs the component constructor on the server, so
+      <code>Title.setTitle()</code> and <code>Meta.updateTag()</code> fire
+      before the HTML response leaves the server. Crawlers and social
+      previewers receive fully populated meta tags without executing
+      JavaScript. The service also writes a <code>&lt;link rel="canonical"&gt;</code>
+      using the current router URL so duplicate-content signals are never
+      sent to search engines.
+    </p>
+<pre class="code-snippet"><code>// core/services/seo.service.ts
+&#64;Injectable({{ '{' }} providedIn: 'root' {{ '}' }})
+export class SeoService {{ '{' }}
+  private titleService = inject(Title);
+  private meta         = inject(Meta);
+  private router       = inject(Router);
+  private doc          = inject(DOCUMENT);
+
+  set(config: {{ '{' }} title: string; description: string; image?: string; jsonLd?: object {{ '}' }}): void {{ '{' }}
+    const fullTitle = `${{ '$' }}{{ '{' }}config.title{{ '}' }} | Zach Young`;
+    const url       = `{{ '$' }}{{ '{' }}environment.siteUrl{{ '}' }}{{ '$' }}{{ '{' }}this.router.url.split('?')[0]{{ '}' }}`;
+
+    this.titleService.setTitle(fullTitle);
+
+    // Core — crawlers read these
+    this.meta.updateTag({{ '{' }} name: 'description',        content: config.description {{ '}' }});
+
+    // Open Graph — LinkedIn, Slack, iMessage previews
+    this.meta.updateTag({{ '{' }} property: 'og:title',       content: fullTitle {{ '}' }});
+    this.meta.updateTag({{ '{' }} property: 'og:description',  content: config.description {{ '}' }});
+    this.meta.updateTag({{ '{' }} property: 'og:url',          content: url {{ '}' }});
+    this.meta.updateTag({{ '{' }} property: 'og:image',        content: config.image ?? DEFAULT_IMAGE {{ '}' }});
+
+    // Twitter Card — X / Twitter link previews
+    this.meta.updateTag({{ '{' }} name: 'twitter:title',       content: fullTitle {{ '}' }});
+    this.meta.updateTag({{ '{' }} name: 'twitter:description', content: config.description {{ '}' }});
+
+    this.setCanonical(url);
+    config.jsonLd ? this.setJsonLd(config.jsonLd) : this.clearJsonLd();
+  {{ '}' }}
+{{ '}' }}
+
+// Every public page component — called in the constructor so SSR captures it
+export class ProjectsListComponent {{ '{' }}
+  constructor() {{ '{' }}
+    inject(SeoService).set({{ '{' }}
+      title:       'Projects',
+      description: 'Progressive web applications built with Ruby on Rails and Angular.',
+    {{ '}' }});
+  {{ '}' }}
+{{ '}' }}</code></pre>
+  </app-code-snippet>
+
+  <app-code-snippet label="JSON-LD structured data">
+    <h3 class="h5">JSON-LD — machine-readable identity for search engines</h3>
+    <p class="text-secondary">
+      The home page injects a <code>schema.org/Person</code> block into the
+      document <code>&lt;head&gt;</code> at SSR time. Google, Bing, and AI
+      overview engines parse this to understand who the site belongs to, what
+      they do, and where they are — independently of the visible page content.
+      The service manages the script tag lifecycle: it creates it on first
+      call, updates it on subsequent calls, and removes it when navigating to
+      a page that doesn't need structured data.
+    </p>
+<pre class="code-snippet"><code>// Injected via SeoService.set({{ '{' }} jsonLd: {{ '{' }} ... {{ '}' }} {{ '}' }}) in HomeComponent
+{{ '{' }}
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Zach Young",
+  "jobTitle": "Senior Full-Stack Software Engineer",
+  "url": "https://zachyoung.org",
+  "image": "https://zachyoung.org/profile.png",
+  "address": {{ '{' }}
+    "@type": "PostalAddress",
+    "addressLocality": "Cape Girardeau",
+    "addressRegion": "MO",
+    "addressCountry": "US"
+  {{ '}' }},
+  "knowsAbout": ["Ruby on Rails", "Angular", "TypeScript", "Hotwire", "PostgreSQL"],
+  "award": ["2× National Champion — Paratriathlon", "3rd — ITU World Championship"]
+{{ '}' }}
+
+// SeoService writes and manages the script tag
+private setJsonLd(data: object): void {{ '{' }}
+  const id = 'json-ld-schema';
+  let script = this.doc.getElementById(id) as HTMLScriptElement | null;
+  if (!script) {{ '{' }}
+    script = this.doc.createElement('script');
+    script.id   = id;
+    script.type = 'application/ld+json';
+    this.doc.head.appendChild(script);
+  {{ '}' }}
+  script.text = JSON.stringify(data);
+{{ '}' }}</code></pre>
+  </app-code-snippet>
+
   </app-code-section>
 
 </section>

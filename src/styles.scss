@@ -25,6 +25,14 @@ $enable-negative-margins: true;
   --border:       #e4e4e7;       // subtle grid hairline
   --rule:         #0a0a0a;       // emphasis hairline (editorial rules)
   --nav-bg:       rgba(255, 255, 255, 0.9);
+
+  // Technology category accents — deeper hues for legibility on white
+  --cat-language:  #6d28d9;      // violet
+  --cat-framework: #1366d6;      // blue (shares the accent)
+  --cat-platform:  #0f766e;      // teal
+  --cat-tool:      #b45309;      // amber
+  --cat-library:   #be123c;      // rose
+  --cat-other:     #6b6b72;      // muted fallback
 }
 
 // 3. Dark theme
@@ -40,6 +48,14 @@ $enable-negative-margins: true;
   --border:       #2a2a2e;
   --rule:         #fafafa;
   --nav-bg:       rgba(10, 10, 10, 0.9);
+
+  // Technology category accents — brighter hues for the dark canvas
+  --cat-language:  #a78bfa;      // violet
+  --cat-framework: #5aa9e0;      // blue (shares the accent)
+  --cat-platform:  #2dd4bf;      // teal
+  --cat-tool:      #fbbf24;      // amber
+  --cat-library:   #fb7185;      // rose
+  --cat-other:     #9b9ba3;      // muted fallback
 }
 
 // 4. Base reset
@@ -147,12 +163,23 @@ main > :not(router-outlet) > section:last-child {
   }
 }
 
-// 7. Shared tech badge (project cards, project detail, community)
+// 7. Shared tech badge (project cards, project detail, stack)
+// Outline + colored category edge: text stays foreground, a colored left
+// border signals the technology's category. Color tokens are --cat-*.
 .tech-badge {
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-  color: var(--accent-dark);
+  background: transparent;
+  color: var(--fg);
   font-weight: 500;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--cat-other);
 }
+
+.tech-badge--language  { border-left-color: var(--cat-language); }
+.tech-badge--framework { border-left-color: var(--cat-framework); }
+.tech-badge--platform  { border-left-color: var(--cat-platform); }
+.tech-badge--tool      { border-left-color: var(--cat-tool); }
+.tech-badge--library   { border-left-color: var(--cat-library); }
+.tech-badge--other     { border-left-color: var(--cat-other); }
 
 .tag-badge {
   background: color-mix(in srgb, var(--fg) 10%, transparent);

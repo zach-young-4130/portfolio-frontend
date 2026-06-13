@@ -17,6 +17,11 @@ export const routes: Routes = [
     title: 'About — Zach Young',
   },
   {
+    path: 'stack',
+    loadComponent: () => import('./features/stack/stack').then((m) => m.StackComponent),
+    title: 'Stack — Zach Young',
+  },
+  {
     path: 'code',
     loadComponent: () => import('./features/code/code').then((m) => m.CodeComponent),
     title: 'Code',

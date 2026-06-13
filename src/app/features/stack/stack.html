@@ -1,0 +1,39 @@
+<app-page-hero
+  title="Stack"
+  eyebrow="Tools of the trade"
+  subtitle="Languages, frameworks, platforms, and tools I've shipped production software with — and the projects that put them to work."
+/>
+
+<section class="container py-5 stack">
+  @if (loading()) {
+    <p role="status" class="text-center">Loading&hellip;</p>
+  } @else {
+    @for (group of groups(); track group.key; let i = $index) {
+      <section class="stack-group" [attr.aria-labelledby]="'stack-' + group.key">
+        <header class="section-head rule-top">
+          <span class="section-index" [style.color]="'var(--cat-' + group.key + ')'">
+            {{ i + 1 < 10 ? '0' + (i + 1) : i + 1 }}
+          </span>
+          <h2 [id]="'stack-' + group.key" class="section-title">{{ group.label }}</h2>
+        </header>
+
+        <ul class="stack-list">
+          @for (entry of group.technologies; track entry.tech.id) {
+            <li class="stack-item">
+              <span class="stack-item__badge">
+                <app-tech-badge [tech]="entry.tech" />
+              </span>
+              @if (entry.projects.length > 0) {
+                <span class="stack-item__projects">
+                  @for (proj of entry.projects; track proj.id) {
+                    <a [routerLink]="['/projects', proj.id]" class="stack-project-link">{{ proj.title }}</a>
+                  }
+                </span>
+              }
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  }
+</section>

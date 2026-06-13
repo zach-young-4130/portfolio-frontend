@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ContactFormComponent } from './contact-form';
+import { environment } from '../../../../environments/environment';
 
 describe('ContactFormComponent', () => {
   let http: HttpTestingController;
@@ -16,19 +17,20 @@ describe('ContactFormComponent', () => {
 
   afterEach(() => http.verify());
 
-  it('disables submit when the form is invalid', () => {
+  it('does not submit an invalid form', () => {
     const fixture = TestBed.createComponent(ContactFormComponent);
     fixture.detectChanges();
-    const button = fixture.nativeElement.querySelector('button[type="submit"]') as HTMLButtonElement;
-    expect(button.disabled).toBe(true);
+    const cmp = fixture.componentInstance as unknown as { submit: () => void };
+    cmp.submit();
+    http.expectNone(`${environment.apiBaseUrl}/contact_messages`);
   });
 
-  it('posts to /api/v1/contact_messages on submit', () => {
+  it('posts to the contact_messages endpoint on submit', () => {
     const fixture = TestBed.createComponent(ContactFormComponent);
     const cmp = fixture.componentInstance as unknown as { form: { setValue: (v: object) => void }; submit: () => void };
-    cmp.form.setValue({ name: 'Jane', email: 'jane@example.com', message: 'Hello there friend' });
+    cmp.form.setValue({ name: 'Jane', email: 'jane@example.com', project_name: 'Acme', message: 'Hello there friend' });
     cmp.submit();
-    const req = http.expectOne('http://localhost:5000/api/v1/contact_messages');
+    const req = http.expectOne(`${environment.apiBaseUrl}/contact_messages`);
     expect(req.request.method).toBe('POST');
     req.flush({ contact_message: { id: 1, name: 'Jane', email: 'jane@example.com', message: 'Hello there friend', read_at: null, created_at: '' } });
   });

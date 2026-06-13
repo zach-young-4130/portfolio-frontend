@@ -40,6 +40,7 @@ export class AdminProjectsComponent extends BaseCrudComponent<Project> implement
     title:           ['', [Validators.required]],
     tagline:         ['', [Validators.required]],
     description:     ['', [Validators.required]],
+    highlights:      [''],
     tech_stack:      ['', [Validators.required]],
     cover_image_url: [''],
     live_url:        [''],
@@ -71,7 +72,7 @@ export class AdminProjectsComponent extends BaseCrudComponent<Project> implement
     this.selectedTechIds.set(new Set());
     this.selectedTagIds.set(new Set());
     this.form.reset({
-      title: '', tagline: '', description: '', tech_stack: '',
+      title: '', tagline: '', description: '', highlights: '', tech_stack: '',
       cover_image_url: '', live_url: '', repo_url: '',
       featured: false, position: 0, published: false,
     });
@@ -84,6 +85,7 @@ export class AdminProjectsComponent extends BaseCrudComponent<Project> implement
       title:           project.title,
       tagline:         project.tagline,
       description:     project.description,
+      highlights:      project.highlights ?? '',
       tech_stack:      project.tech_stack,
       cover_image_url: project.cover_image_url ?? '',
       live_url:        project.live_url ?? '',
