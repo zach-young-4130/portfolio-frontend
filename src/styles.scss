@@ -9,7 +9,7 @@ $border-radius-sm: 0;
 $border-radius-lg: 0;
 $enable-negative-margins: true;
 
-@import 'bootstrap/scss/bootstrap';
+@use 'bootstrap/scss/bootstrap';
 
 // 2. CSS custom properties — light theme (default)
 :root,
